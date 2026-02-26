@@ -1,0 +1,14 @@
+##fileformat=VCFv4.2
+##source=GeneMaprTest
+##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+##contig=<ID=chr1,length=248956422>
+##contig=<ID=chr7,length=159345973>
+##contig=<ID=chr13,length=114364328>
+##contig=<ID=chr17,length=83257441>
+#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO
+chr1	12345	rs123456	A	G	100	PASS	DP=50;AF=0.25
+chr7	140753336	rs113488022	A	T	200	PASS	DP=120;AF=0.001
+chr13	32936732	rs80359550	C	T	150	PASS	DP=65;AF=0.0003
+chr17	7577538	rs28934578	G	A	250	PASS	DP=80;AF=0.0001
+chr17	7578406	rs11540652	C	T	180	PASS	DP=90;AF=0.005
