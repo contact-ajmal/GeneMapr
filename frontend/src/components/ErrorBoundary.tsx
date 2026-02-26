@@ -29,12 +29,12 @@ export default class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-lg p-8 max-w-lg w-full">
+        <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex items-center justify-center p-4 transition-colors duration-200">
+          <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-8 max-w-lg w-full transition-colors duration-200">
             <div className="flex items-center space-x-3 mb-4">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center">
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900 rounded-full flex items-center justify-center">
                 <svg
-                  className="w-6 h-6 text-red-600"
+                  className="w-6 h-6 text-red-600 dark:text-red-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -47,23 +47,23 @@ export default class ErrorBoundary extends React.Component<
                   />
                 </svg>
               </div>
-              <h2 className="text-xl font-semibold text-slate-900">
+              <h2 className="text-xl font-semibold text-slate-900 dark:text-slate-100">
                 Something went wrong
               </h2>
             </div>
-            <p className="text-slate-600 mb-4">
+            <p className="text-slate-600 dark:text-slate-400 mb-4">
               An unexpected error occurred. Please try refreshing the page.
             </p>
             {this.state.error && (
-              <div className="bg-slate-50 rounded p-3 mb-4">
-                <p className="text-sm font-mono text-slate-700">
+              <div className="bg-slate-50 dark:bg-slate-900 rounded p-3 mb-4 transition-colors duration-200">
+                <p className="text-sm font-mono text-slate-700 dark:text-slate-300">
                   {this.state.error.message}
                 </p>
               </div>
             )}
             <button
               onClick={() => window.location.reload()}
-              className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors font-medium"
+              className="w-full bg-blue-600 dark:bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors font-medium"
             >
               Reload Page
             </button>

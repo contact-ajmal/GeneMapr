@@ -12,11 +12,11 @@ export default function VariantDetailModal({
   if (!variant) return null
 
   const getRiskColor = (score: number | null) => {
-    if (score === null) return 'bg-slate-100 text-slate-700'
-    if (score >= 75) return 'bg-red-100 text-red-800'
-    if (score >= 50) return 'bg-orange-100 text-orange-800'
-    if (score >= 25) return 'bg-yellow-100 text-yellow-800'
-    return 'bg-green-100 text-green-800'
+    if (score === null) return 'bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300'
+    if (score >= 75) return 'bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200'
+    if (score >= 50) return 'bg-orange-100 dark:bg-orange-900 text-orange-800 dark:text-orange-200'
+    if (score >= 25) return 'bg-yellow-100 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-200'
+    return 'bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200'
   }
 
   const getRiskLabel = (score: number | null) => {
@@ -29,27 +29,27 @@ export default function VariantDetailModal({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 flex items-center justify-center p-4 z-50 transition-colors duration-200"
       onClick={onClose}
     >
       <div
-        className="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto"
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto transition-colors duration-200"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+        <div className="sticky top-0 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between">
           <div>
-            <h2 className="text-2xl font-bold text-slate-900">Variant Details</h2>
-            <p className="text-sm text-slate-600 mt-1">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">Variant Details</h2>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
               {variant.chrom}:{variant.pos} {variant.ref} → {variant.alt}
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
           >
             <svg
-              className="w-6 h-6 text-slate-500"
+              className="w-6 h-6 text-slate-500 dark:text-slate-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -67,9 +67,9 @@ export default function VariantDetailModal({
         <div className="p-6 space-y-6">
           {/* Risk Score */}
           {variant.risk_score !== null && (
-            <div className="bg-gradient-to-br from-blue-50 to-slate-50 rounded-lg p-5 border border-slate-200">
+            <div className="bg-gradient-to-br from-blue-50 to-slate-50 dark:from-slate-800 dark:to-slate-850 rounded-lg p-5 border border-slate-200 dark:border-slate-700 transition-colors duration-200">
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-lg font-semibold text-slate-900">Risk Assessment</h3>
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100">Risk Assessment</h3>
                 <span
                   className={`px-3 py-1 rounded-full text-sm font-semibold ${getRiskColor(
                     variant.risk_score
@@ -80,22 +80,22 @@ export default function VariantDetailModal({
               </div>
               <div className="flex items-center space-x-4">
                 <div className="flex-1">
-                  <div className="h-3 bg-slate-200 rounded-full overflow-hidden">
+                  <div className="h-3 bg-slate-200 dark:bg-slate-700 rounded-full overflow-hidden">
                     <div
                       className={`h-full transition-all ${
                         variant.risk_score >= 75
-                          ? 'bg-red-500'
+                          ? 'bg-red-500 dark:bg-red-400'
                           : variant.risk_score >= 50
-                          ? 'bg-orange-500'
+                          ? 'bg-orange-500 dark:bg-orange-400'
                           : variant.risk_score >= 25
-                          ? 'bg-yellow-500'
-                          : 'bg-green-500'
+                          ? 'bg-yellow-500 dark:bg-yellow-400'
+                          : 'bg-green-500 dark:bg-green-400'
                       }`}
                       style={{ width: `${variant.risk_score}%` }}
                     ></div>
                   </div>
                 </div>
-                <span className="text-2xl font-bold text-slate-900">
+                <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                   {variant.risk_score}
                 </span>
               </div>
@@ -104,11 +104,11 @@ export default function VariantDetailModal({
 
           {/* AI Summary */}
           {variant.ai_summary && (
-            <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-lg p-5 border border-purple-200">
+            <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950 dark:to-blue-950 rounded-lg p-5 border border-purple-200 dark:border-purple-800 transition-colors duration-200">
               <div className="flex items-start space-x-3">
-                <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900 rounded-lg flex items-center justify-center flex-shrink-0">
                   <svg
-                    className="w-5 h-5 text-purple-600"
+                    className="w-5 h-5 text-purple-600 dark:text-purple-400"
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -122,10 +122,10 @@ export default function VariantDetailModal({
                   </svg>
                 </div>
                 <div className="flex-1">
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                  <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-2">
                     AI-Generated Summary
                   </h3>
-                  <p className="text-slate-700 leading-relaxed">{variant.ai_summary}</p>
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed">{variant.ai_summary}</p>
                 </div>
               </div>
             </div>
@@ -133,7 +133,7 @@ export default function VariantDetailModal({
 
           {/* Basic Information */}
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">
               Basic Information
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
@@ -151,7 +151,7 @@ export default function VariantDetailModal({
 
           {/* Clinical Information */}
           <div>
-            <h3 className="text-lg font-semibold text-slate-900 mb-3">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">
               Clinical Information
             </h3>
             <div className="grid md:grid-cols-2 gap-4">
@@ -177,11 +177,11 @@ export default function VariantDetailModal({
           {variant.raw_annotations &&
             Object.keys(variant.raw_annotations).length > 0 && (
               <div>
-                <h3 className="text-lg font-semibold text-slate-900 mb-3">
+                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">
                   Raw Annotations
                 </h3>
-                <div className="bg-slate-50 rounded-lg p-4 border border-slate-200 max-h-64 overflow-y-auto">
-                  <pre className="text-xs font-mono text-slate-700 whitespace-pre-wrap">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700 max-h-64 overflow-y-auto transition-colors duration-200">
+                  <pre className="text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                     {JSON.stringify(variant.raw_annotations, null, 2)}
                   </pre>
                 </div>
@@ -189,11 +189,11 @@ export default function VariantDetailModal({
             )}
 
           {/* Metadata */}
-          <div className="border-t border-slate-200 pt-4">
-            <p className="text-sm text-slate-500">
+          <div className="border-t border-slate-200 dark:border-slate-700 pt-4">
+            <p className="text-sm text-slate-500 dark:text-slate-400">
               Created: {new Date(variant.created_at).toLocaleString()}
             </p>
-            <p className="text-xs text-slate-400 mt-1">ID: {variant.id}</p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">ID: {variant.id}</p>
           </div>
         </div>
       </div>
@@ -209,11 +209,11 @@ interface InfoItemProps {
 
 function InfoItem({ label, value, highlight }: InfoItemProps) {
   return (
-    <div className="bg-white rounded-lg p-3 border border-slate-200">
-      <p className="text-xs text-slate-500 mb-1">{label}</p>
+    <div className="bg-white dark:bg-slate-850 rounded-lg p-3 border border-slate-200 dark:border-slate-700 transition-colors duration-200">
+      <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">{label}</p>
       <p
         className={`font-medium ${
-          highlight ? 'text-red-700' : 'text-slate-900'
+          highlight ? 'text-red-700 dark:text-red-400' : 'text-slate-900 dark:text-slate-100'
         }`}
       >
         {value}

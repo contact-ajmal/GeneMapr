@@ -58,8 +58,8 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-slate-900">Variant Dashboard</h1>
-          <p className="text-slate-600 mt-1">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">Variant Dashboard</h1>
+          <p className="text-slate-600 dark:text-slate-400 mt-1">
             {data?.total
               ? `Showing ${data.total.toLocaleString()} variant${
                   data.total !== 1 ? 's' : ''
@@ -71,8 +71,8 @@ export default function DashboardPage() {
         <button
           onClick={handleExport}
           disabled={isExporting || !data?.variants.length}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg
-            hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed
+          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 dark:bg-blue-500 text-white rounded-lg
+            hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed
             transition-colors font-medium"
         >
           {isExporting ? (
@@ -115,14 +115,14 @@ export default function DashboardPage() {
         {/* Table Section */}
         <div className="lg:col-span-3 space-y-4">
           {isLoading ? (
-            <div className="bg-white rounded-lg border border-slate-200 p-12">
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 p-12 transition-colors duration-200">
               <LoadingSpinner size="lg" text="Loading variants..." />
             </div>
           ) : error ? (
-            <div className="bg-white rounded-lg border border-red-200 p-8">
+            <div className="bg-white dark:bg-slate-800 rounded-lg border border-red-200 dark:border-red-800 p-8 transition-colors duration-200">
               <div className="flex items-start space-x-3">
                 <svg
-                  className="w-6 h-6 text-red-600 mt-0.5"
+                  className="w-6 h-6 text-red-600 dark:text-red-400 mt-0.5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -135,13 +135,13 @@ export default function DashboardPage() {
                   />
                 </svg>
                 <div>
-                  <h3 className="font-semibold text-red-900">Error loading variants</h3>
-                  <p className="text-sm text-red-700 mt-1">
+                  <h3 className="font-semibold text-red-900 dark:text-red-100">Error loading variants</h3>
+                  <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                     {error instanceof Error ? error.message : 'An unexpected error occurred'}
                   </p>
                   <button
                     onClick={() => refetch()}
-                    className="mt-3 px-4 py-2 bg-red-100 hover:bg-red-200 text-red-900
+                    className="mt-3 px-4 py-2 bg-red-100 dark:bg-red-900 hover:bg-red-200 dark:hover:bg-red-800 text-red-900 dark:text-red-100
                       rounded-md text-sm font-medium transition-colors"
                   >
                     Try Again
@@ -158,27 +158,27 @@ export default function DashboardPage() {
 
               {/* Pagination */}
               {totalPages > 1 && (
-                <div className="bg-white rounded-lg border border-slate-200 px-6 py-4">
+                <div className="bg-white dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 px-6 py-4 transition-colors duration-200">
                   <div className="flex items-center justify-between">
-                    <p className="text-sm text-slate-600">
+                    <p className="text-sm text-slate-600 dark:text-slate-400">
                       Page {page} of {totalPages}
                     </p>
                     <div className="flex space-x-2">
                       <button
                         onClick={() => setPage((p) => Math.max(1, p - 1))}
                         disabled={page === 1}
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50
-                          disabled:text-slate-400 disabled:cursor-not-allowed rounded-md
-                          text-sm font-medium transition-colors"
+                        className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:bg-slate-50 dark:disabled:bg-slate-800
+                          disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed rounded-md
+                          text-sm font-medium transition-colors text-slate-900 dark:text-slate-100"
                       >
                         Previous
                       </button>
                       <button
                         onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                         disabled={page === totalPages}
-                        className="px-4 py-2 bg-slate-100 hover:bg-slate-200 disabled:bg-slate-50
-                          disabled:text-slate-400 disabled:cursor-not-allowed rounded-md
-                          text-sm font-medium transition-colors"
+                        className="px-4 py-2 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 disabled:bg-slate-50 dark:disabled:bg-slate-800
+                          disabled:text-slate-400 dark:disabled:text-slate-600 disabled:cursor-not-allowed rounded-md
+                          text-sm font-medium transition-colors text-slate-900 dark:text-slate-100"
                       >
                         Next
                       </button>

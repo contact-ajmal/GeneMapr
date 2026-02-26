@@ -55,14 +55,14 @@ export default function FilterPanel({
     filters.risk_score_max !== undefined
 
   return (
-    <div className="bg-white rounded-lg shadow-sm border border-slate-200">
+    <div className="bg-white dark:bg-slate-800 rounded-lg shadow-sm border border-slate-200 dark:border-slate-700 transition-colors duration-200">
       <div
         className="flex items-center justify-between p-4 cursor-pointer"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         <div className="flex items-center space-x-2">
           <svg
-            className="w-5 h-5 text-slate-600"
+            className="w-5 h-5 text-slate-600 dark:text-slate-400"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -74,15 +74,15 @@ export default function FilterPanel({
               d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
             />
           </svg>
-          <h3 className="font-semibold text-slate-900">Filters</h3>
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100">Filters</h3>
           {hasActiveFilters && (
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">
+            <span className="px-2 py-0.5 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 text-xs font-medium rounded-full">
               Active
             </span>
           )}
         </div>
         <svg
-          className={`w-5 h-5 text-slate-400 transition-transform ${
+          className={`w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform ${
             isExpanded ? 'rotate-180' : ''
           }`}
           fill="none"
@@ -99,10 +99,10 @@ export default function FilterPanel({
       </div>
 
       {isExpanded && (
-        <div className="px-4 pb-4 space-y-4 border-t border-slate-100">
+        <div className="px-4 pb-4 space-y-4 border-t border-slate-100 dark:border-slate-700">
           {/* Gene Filter */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Gene
             </label>
             <input
@@ -110,14 +110,15 @@ export default function FilterPanel({
               value={filters.gene || ''}
               onChange={(e) => updateFilter('gene', e.target.value || undefined)}
               placeholder="e.g., BRCA1"
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm
+                bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
 
           {/* Clinical Significance */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Clinical Significance
             </label>
             <select
@@ -125,7 +126,8 @@ export default function FilterPanel({
               onChange={(e) =>
                 updateFilter('clinical_significance', e.target.value || undefined)
               }
-              className="w-full px-3 py-2 border border-slate-300 rounded-md text-sm
+              className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm
+                bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="">All</option>
@@ -139,7 +141,7 @@ export default function FilterPanel({
 
           {/* Allele Frequency Range */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Allele Frequency
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -156,7 +158,8 @@ export default function FilterPanel({
                 min="0"
                 max="1"
                 step="0.001"
-                className="px-3 py-2 border border-slate-300 rounded-md text-sm
+                className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm
+                  bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <input
@@ -172,7 +175,8 @@ export default function FilterPanel({
                 min="0"
                 max="1"
                 step="0.001"
-                className="px-3 py-2 border border-slate-300 rounded-md text-sm
+                className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm
+                  bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -180,7 +184,7 @@ export default function FilterPanel({
 
           {/* Risk Score Range */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Risk Score
             </label>
             <div className="grid grid-cols-2 gap-2">
@@ -197,7 +201,8 @@ export default function FilterPanel({
                 min="0"
                 max="100"
                 step="1"
-                className="px-3 py-2 border border-slate-300 rounded-md text-sm
+                className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm
+                  bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
               <input
@@ -213,7 +218,8 @@ export default function FilterPanel({
                 min="0"
                 max="100"
                 step="1"
-                className="px-3 py-2 border border-slate-300 rounded-md text-sm
+                className="px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm
+                  bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100
                   focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -221,23 +227,23 @@ export default function FilterPanel({
 
           {/* Consequence Type */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1.5">
+            <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1.5">
               Consequence Type
             </label>
             <div className="space-y-1.5 max-h-48 overflow-y-auto">
               {CONSEQUENCE_OPTIONS.map((consequence) => (
                 <label
                   key={consequence}
-                  className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50 p-1.5 rounded"
+                  className="flex items-center space-x-2 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 p-1.5 rounded"
                 >
                   <input
                     type="checkbox"
                     checked={(filters.consequence || []).includes(consequence)}
                     onChange={() => toggleConsequence(consequence)}
-                    className="w-4 h-4 text-blue-600 border-slate-300 rounded
+                    className="w-4 h-4 text-blue-600 border-slate-300 dark:border-slate-600 rounded
                       focus:ring-2 focus:ring-blue-500"
                   />
-                  <span className="text-sm text-slate-700">
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
                     {consequence.replace(/_/g, ' ')}
                   </span>
                 </label>
@@ -249,7 +255,7 @@ export default function FilterPanel({
           {hasActiveFilters && (
             <button
               onClick={onClearFilters}
-              className="w-full py-2 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700
+              className="w-full py-2 px-4 bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200
                 rounded-md text-sm font-medium transition-colors"
             >
               Clear All Filters

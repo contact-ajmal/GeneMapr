@@ -66,13 +66,13 @@ export default function UploadPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-slate-900 mb-2">Upload VCF File</h1>
-        <p className="text-slate-600">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 mb-2">Upload VCF File</h1>
+        <p className="text-slate-600 dark:text-slate-400">
           Upload your genomic variant file for comprehensive annotation and interpretation
         </p>
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-8 border border-slate-200">
+      <div className="bg-white dark:bg-slate-800 rounded-xl shadow-md p-8 border border-slate-200 dark:border-slate-700 transition-colors duration-200">
         {/* Drag and Drop Zone */}
         <div
           onDragEnter={handleDrag}
@@ -81,8 +81,8 @@ export default function UploadPage() {
           onDrop={handleDrop}
           className={`relative border-2 border-dashed rounded-lg p-12 text-center transition-all ${
             dragActive
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-slate-300 bg-slate-50 hover:border-slate-400'
+              ? 'border-blue-500 dark:border-blue-400 bg-blue-50 dark:bg-blue-950'
+              : 'border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-850 hover:border-slate-400 dark:hover:border-slate-500'
           }`}
         >
           <input
@@ -94,9 +94,9 @@ export default function UploadPage() {
           />
 
           <div className="space-y-4">
-            <div className="w-16 h-16 mx-auto bg-blue-100 rounded-full flex items-center justify-center">
+            <div className="w-16 h-16 mx-auto bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
               <svg
-                className="w-8 h-8 text-blue-600"
+                className="w-8 h-8 text-blue-600 dark:text-blue-400"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -111,16 +111,16 @@ export default function UploadPage() {
             </div>
 
             <div>
-              <p className="text-lg font-medium text-slate-700 mb-1">
+              <p className="text-lg font-medium text-slate-700 dark:text-slate-300 mb-1">
                 Drop your VCF file here, or{' '}
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="text-blue-600 hover:text-blue-700 font-semibold underline"
+                  className="text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 font-semibold underline"
                 >
                   browse
                 </button>
               </p>
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 Supports .vcf and .vcf.gz files
               </p>
             </div>
@@ -129,11 +129,11 @@ export default function UploadPage() {
 
         {/* Selected File Display */}
         {file && (
-          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg flex items-center justify-between">
+          <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between transition-colors duration-200">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
                 <svg
-                  className="w-5 h-5 text-blue-600"
+                  className="w-5 h-5 text-blue-600 dark:text-blue-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -147,15 +147,15 @@ export default function UploadPage() {
                 </svg>
               </div>
               <div>
-                <p className="font-medium text-slate-900">{file.name}</p>
-                <p className="text-sm text-slate-600">
+                <p className="font-medium text-slate-900 dark:text-slate-100">{file.name}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   {(file.size / 1024 / 1024).toFixed(2)} MB
                 </p>
               </div>
             </div>
             <button
               onClick={() => setFile(null)}
-              className="text-slate-400 hover:text-slate-600"
+              className="text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
             >
               <svg
                 className="w-5 h-5"
@@ -178,8 +178,8 @@ export default function UploadPage() {
         <button
           onClick={handleUpload}
           disabled={!file || uploadMutation.isPending}
-          className="w-full mt-6 bg-blue-600 text-white py-3 px-6 rounded-lg hover:bg-blue-700
-            disabled:bg-slate-300 disabled:cursor-not-allowed font-medium transition-colors
+          className="w-full mt-6 bg-blue-600 dark:bg-blue-500 text-white py-3 px-6 rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600
+            disabled:bg-slate-300 dark:disabled:bg-slate-700 disabled:cursor-not-allowed font-medium transition-colors
             flex items-center justify-center space-x-2"
         >
           {uploadMutation.isPending ? (
@@ -194,10 +194,10 @@ export default function UploadPage() {
 
         {/* Success Message */}
         {uploadMutation.isSuccess && (
-          <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg transition-colors duration-200">
             <div className="flex items-start space-x-3">
               <svg
-                className="w-5 h-5 text-green-600 mt-0.5"
+                className="w-5 h-5 text-green-600 dark:text-green-400 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -210,8 +210,8 @@ export default function UploadPage() {
                 />
               </svg>
               <div>
-                <p className="font-medium text-green-900">Upload successful!</p>
-                <p className="text-sm text-green-700 mt-1">
+                <p className="font-medium text-green-900 dark:text-green-100">Upload successful!</p>
+                <p className="text-sm text-green-700 dark:text-green-300 mt-1">
                   Parsed {uploadMutation.data?.variants_parsed} variants. Redirecting to
                   dashboard...
                 </p>
@@ -222,10 +222,10 @@ export default function UploadPage() {
 
         {/* Error Message */}
         {uploadMutation.isError && (
-          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <div className="mt-4 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg transition-colors duration-200">
             <div className="flex items-start space-x-3">
               <svg
-                className="w-5 h-5 text-red-600 mt-0.5"
+                className="w-5 h-5 text-red-600 dark:text-red-400 mt-0.5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -238,8 +238,8 @@ export default function UploadPage() {
                 />
               </svg>
               <div>
-                <p className="font-medium text-red-900">Upload failed</p>
-                <p className="text-sm text-red-700 mt-1">
+                <p className="font-medium text-red-900 dark:text-red-100">Upload failed</p>
+                <p className="text-sm text-red-700 dark:text-red-300 mt-1">
                   {uploadMutation.error?.message || 'An unexpected error occurred'}
                 </p>
               </div>
@@ -250,10 +250,10 @@ export default function UploadPage() {
 
       {/* Info Section */}
       <div className="mt-8 grid md:grid-cols-3 gap-4">
-        <div className="bg-white rounded-lg p-4 border border-slate-200">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 transition-colors duration-200">
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-3">
             <svg
-              className="w-5 h-5 text-blue-600"
+              className="w-5 h-5 text-blue-600 dark:text-blue-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -266,16 +266,16 @@ export default function UploadPage() {
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-slate-900 mb-1">Comprehensive Annotation</h3>
-          <p className="text-sm text-slate-600">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Comprehensive Annotation</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Enriched with Ensembl, ClinVar, and gnomAD data
           </p>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-slate-200">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 transition-colors duration-200">
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-3">
             <svg
-              className="w-5 h-5 text-blue-600"
+              className="w-5 h-5 text-blue-600 dark:text-blue-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -288,16 +288,16 @@ export default function UploadPage() {
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-slate-900 mb-1">Risk Scoring</h3>
-          <p className="text-sm text-slate-600">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">Risk Scoring</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Intelligent pathogenicity assessment for clinical significance
           </p>
         </div>
 
-        <div className="bg-white rounded-lg p-4 border border-slate-200">
-          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mb-3">
+        <div className="bg-white dark:bg-slate-800 rounded-lg p-4 border border-slate-200 dark:border-slate-700 transition-colors duration-200">
+          <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center mb-3">
             <svg
-              className="w-5 h-5 text-blue-600"
+              className="w-5 h-5 text-blue-600 dark:text-blue-400"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -310,8 +310,8 @@ export default function UploadPage() {
               />
             </svg>
           </div>
-          <h3 className="font-semibold text-slate-900 mb-1">AI Insights</h3>
-          <p className="text-sm text-slate-600">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-1">AI Insights</h3>
+          <p className="text-sm text-slate-600 dark:text-slate-400">
             Natural language summaries powered by advanced AI
           </p>
         </div>
