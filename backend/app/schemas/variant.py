@@ -26,6 +26,26 @@ class VariantResponse(VariantBase):
     upload_id: str | None
     created_at: datetime
 
+    # Annotation fields - Ensembl
+    gene_symbol: str | None = None
+    transcript_id: str | None = None
+    consequence: str | None = None
+    protein_change: str | None = None
+
+    # Annotation fields - ClinVar
+    clinvar_significance: str | None = None
+    clinvar_review_status: str | None = None
+    clinvar_condition: str | None = None
+
+    # Annotation fields - gnomAD
+    gnomad_af: float | None = None
+    gnomad_ac: int | None = None
+    gnomad_an: int | None = None
+
+    # Annotation metadata
+    annotation_status: str | None = None
+    annotated_at: datetime | None = None
+
     model_config = {"from_attributes": True}
 
 

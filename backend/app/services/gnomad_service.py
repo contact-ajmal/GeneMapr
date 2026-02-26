@@ -1,0 +1,101 @@
+"""
+gnomAD annotation service.
+
+Queries gnomAD API for population allele frequencies.
+"""
+import httpx
+import json
+from typing import Dict, Optional
+
+from app.core.redis import get_redis
+
+
+# gnomAD GraphQL API endpoint
+GNOMAD_API_URL = "https://gnomad.broadinstitute.org/api"
+
+
+async def get_gnomad_annotation(
+    chrom: str,
+    pos: int,
+    ref: str,
+    alt: str
+) -> Dict[str, Optional[float | int]]:
+    """
+    Query gnomAD for allele frequency data via GraphQL API.
+
+    Returns:
+        Dict with gnomad_af (allele frequency), gnomad_ac (allele count), gnomad_an (allele number)
+    """
+    # Build cache key
+    cache_key = f"gnomad:{chrom}-{pos}-{ref}-{alt}"
+
+    # Check Redis cache
+    redis_client = await get_redis()
+    cached_data = await redis_client.get(cache_key)
+
+    if cached_data:
+        return json.loads(cached_data)
+
+    # Default response (graceful degradation)
+    result = {
+        "gnomad_af": None,
+        "gnomad_ac": None,
+        "gnomad_an": None
+    }
+
+    try:
+        # Build variant ID for gnomAD
+        # Format: chrom-pos-ref-alt
+        variant_id = f"{chrom}-{pos}-{ref}-{alt}"
+
+        # GraphQL query for gnomAD v4
+        query = """
+        query GnomadVariant($variantId: String!, $datasetId: DatasetId!) {
+          variant(variantId: $variantId, dataset: $datasetId) {
+            genome {
+              ac
+              an
+              af
+            }
+          }
+        }
+        """
+
+        variables = {
+            "variantId": variant_id,
+            "datasetId": "gnomad_r4"
+        }
+
+        async with httpx.AsyncClient(timeout=10.0) as client:
+            response = await client.post(
+                GNOMAD_API_URL,
+                json={"query": query, "variables": variables}
+            )
+            response.raise_for_status()
+            data = response.json()
+
+            # Parse response
+            if "data" in data and data["data"].get("variant"):
+                genome_data = data["data"]["variant"].get("genome")
+
+                if genome_data:
+                    result["gnomad_af"] = genome_data.get("af")
+                    result["gnomad_ac"] = genome_data.get("ac")
+                    result["gnomad_an"] = genome_data.get("an")
+
+        # Cache the result
+        await redis_client.setex(
+            cache_key,
+            86400,  # 24 hour TTL
+            json.dumps(result)
+        )
+
+    except httpx.HTTPError as e:
+        # Log error but return null values (graceful degradation)
+        print(f"gnomAD HTTP error for {chrom}:{pos}: {str(e)}")
+
+    except Exception as e:
+        # Log error but return null values (graceful degradation)
+        print(f"gnomAD error for {chrom}:{pos}: {str(e)}")
+
+    return result

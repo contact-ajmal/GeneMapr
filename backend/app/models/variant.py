@@ -38,6 +38,30 @@ class Variant(Base):
         unique=True
     )
 
+    # Annotation fields - Ensembl
+    gene_symbol: Mapped[str] = mapped_column(String(100), nullable=True)
+    transcript_id: Mapped[str] = mapped_column(String(100), nullable=True)
+    consequence: Mapped[str] = mapped_column(String(200), nullable=True)
+    protein_change: Mapped[str] = mapped_column(String(200), nullable=True)
+
+    # Annotation fields - ClinVar
+    clinvar_significance: Mapped[str] = mapped_column(String(200), nullable=True)
+    clinvar_review_status: Mapped[str] = mapped_column(String(200), nullable=True)
+    clinvar_condition: Mapped[str] = mapped_column(Text, nullable=True)
+
+    # Annotation fields - gnomAD
+    gnomad_af: Mapped[float] = mapped_column(Float, nullable=True)
+    gnomad_ac: Mapped[int] = mapped_column(Integer, nullable=True)
+    gnomad_an: Mapped[int] = mapped_column(Integer, nullable=True)
+
+    # Annotation metadata
+    annotation_status: Mapped[str] = mapped_column(
+        String(50),
+        nullable=True,
+        default="pending"
+    )
+    annotated_at: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+
     # Metadata
     upload_id: Mapped[str] = mapped_column(String(100), nullable=True, index=True)
     created_at: Mapped[datetime] = mapped_column(
