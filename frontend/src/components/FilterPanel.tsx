@@ -47,7 +47,7 @@ export default function FilterPanel({
 
   const hasActiveFilters =
     filters.gene ||
-    filters.clinical_significance ||
+    filters.clinvar_significance ||
     filters.af_min !== undefined ||
     filters.af_max !== undefined ||
     (filters.consequence && filters.consequence.length > 0) ||
@@ -122,9 +122,9 @@ export default function FilterPanel({
               Clinical Significance
             </label>
             <select
-              value={filters.clinical_significance || ''}
+              value={filters.clinvar_significance || ''}
               onChange={(e) =>
-                updateFilter('clinical_significance', e.target.value || undefined)
+                updateFilter('clinvar_significance', e.target.value || undefined)
               }
               className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-md text-sm
                 bg-white dark:bg-slate-700 text-slate-900 dark:text-slate-100

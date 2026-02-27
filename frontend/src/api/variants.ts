@@ -1,5 +1,5 @@
 import apiClient from './client'
-import type { Variant, PaginatedVariants, VariantFilters, UploadResponse } from '../types/variant'
+import type { PaginatedVariants, VariantFilters, UploadResponse } from '../types/variant'
 
 export const uploadVCF = async (file: File): Promise<UploadResponse> => {
   const formData = new FormData()
@@ -22,11 +22,12 @@ export const getVariants = async (
   const params: Record<string, any> = {
     skip: (page - 1) * pageSize,
     limit: pageSize,
+    _t: Date.now(), // Cache buster
   }
 
   if (filters) {
     if (filters.gene) params.gene = filters.gene
-    if (filters.clinical_significance) params.clinical_significance = filters.clinical_significance
+    if (filters.clinvar_significance) params.clinvar_significance = filters.clinvar_significance
     if (filters.af_min !== undefined) params.af_min = filters.af_min
     if (filters.af_max !== undefined) params.af_max = filters.af_max
     if (filters.consequence && filters.consequence.length > 0) {
@@ -36,17 +37,12 @@ export const getVariants = async (
     if (filters.risk_score_max !== undefined) params.risk_score_max = filters.risk_score_max
   }
 
-  const response = await apiClient.get<Variant[]>('/variants/', { params })
+  console.log('Fetching variants with params:', params)
+  const response = await apiClient.get<PaginatedVariants>('/variants', { params })
+  console.log('Received response:', response.data)
 
-  // Since the backend returns an array, we need to construct pagination info
-  // Adjust this based on your actual backend response structure
-  return {
-    variants: response.data,
-    total: response.data.length,
-    page,
-    page_size: pageSize,
-    total_pages: Math.ceil(response.data.length / pageSize),
-  }
+  // Backend returns the full paginated response
+  return response.data
 }
 
 export const exportVariantsCSV = async (filters?: VariantFilters): Promise<Blob> => {
@@ -54,7 +50,7 @@ export const exportVariantsCSV = async (filters?: VariantFilters): Promise<Blob>
 
   if (filters) {
     if (filters.gene) params.gene = filters.gene
-    if (filters.clinical_significance) params.clinical_significance = filters.clinical_significance
+    if (filters.clinvar_significance) params.clinvar_significance = filters.clinvar_significance
     if (filters.af_min !== undefined) params.af_min = filters.af_min
     if (filters.af_max !== undefined) params.af_max = filters.af_max
     if (filters.consequence && filters.consequence.length > 0) {

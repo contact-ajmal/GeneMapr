@@ -55,7 +55,7 @@ export default function VariantTable({ variants, onRowClick }: VariantTableProps
       ),
     },
     {
-      accessorKey: 'gene',
+      accessorKey: 'gene_symbol',
       header: 'Gene',
       cell: (info) => {
         const gene = info.getValue() as string | null
@@ -81,7 +81,7 @@ export default function VariantTable({ variants, onRowClick }: VariantTableProps
       },
     },
     {
-      accessorKey: 'clinical_significance',
+      accessorKey: 'clinvar_significance',
       header: 'Clinical Significance',
       cell: (info) => {
         const sig = info.getValue() as string | null
@@ -106,7 +106,7 @@ export default function VariantTable({ variants, onRowClick }: VariantTableProps
       },
     },
     {
-      accessorKey: 'allele_frequency',
+      accessorKey: 'allele_freq',
       header: 'AF',
       cell: (info) => {
         const af = info.getValue() as number | null

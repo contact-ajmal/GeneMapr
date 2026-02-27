@@ -139,11 +139,15 @@ async def get_variants(
     result = await db.execute(query)
     variants = result.scalars().all()
 
+    # Calculate total pages
+    total_pages = (total + page_size - 1) // page_size if total > 0 else 1
+
     return VariantListResponse(
         variants=[VariantResponse.model_validate(v) for v in variants],
         total=total,
         page=page,
-        page_size=page_size
+        page_size=page_size,
+        total_pages=total_pages
     )
 
 

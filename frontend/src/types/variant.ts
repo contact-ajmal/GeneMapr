@@ -4,19 +4,33 @@ export interface Variant {
   pos: number
   ref: string
   alt: string
-  gene: string | null
+  qual: number | null
+  filter_status: string | null
+  rs_id: string | null
+  depth: number | null
+  allele_freq: number | null
+  normalized_variant: string
+  gene_symbol: string | null
+  transcript_id: string | null
   consequence: string | null
-  clinical_significance: string | null
-  allele_frequency: number | null
+  protein_change: string | null
+  clinvar_significance: string | null
+  clinvar_review_status: string | null
+  clinvar_condition: string | null
+  gnomad_af: number | null
+  gnomad_ac: number | null
+  gnomad_an: number | null
+  annotation_status: string
+  annotated_at: string | null
   risk_score: number | null
   ai_summary: string | null
-  raw_annotations: Record<string, any>
+  upload_id: string
   created_at: string
 }
 
 export interface VariantFilters {
   gene?: string
-  clinical_significance?: string
+  clinvar_significance?: string
   af_min?: number
   af_max?: number
   consequence?: string[]

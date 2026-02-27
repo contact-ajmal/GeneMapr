@@ -141,7 +141,7 @@ export default function VariantDetailModal({
               <InfoItem label="Position" value={variant.pos.toLocaleString()} />
               <InfoItem label="Reference" value={variant.ref} />
               <InfoItem label="Alternate" value={variant.alt} />
-              <InfoItem label="Gene" value={variant.gene || 'N/A'} />
+              <InfoItem label="Gene" value={variant.gene_symbol || 'N/A'} />
               <InfoItem
                 label="Consequence"
                 value={variant.consequence?.replace(/_/g, ' ') || 'N/A'}
@@ -157,36 +157,38 @@ export default function VariantDetailModal({
             <div className="grid md:grid-cols-2 gap-4">
               <InfoItem
                 label="Clinical Significance"
-                value={variant.clinical_significance || 'N/A'}
+                value={variant.clinvar_significance || 'N/A'}
                 highlight={
-                  variant.clinical_significance?.toLowerCase().includes('pathogenic')
+                  variant.clinvar_significance?.toLowerCase().includes('pathogenic')
                 }
               />
               <InfoItem
                 label="Allele Frequency"
                 value={
-                  variant.allele_frequency !== null
-                    ? variant.allele_frequency.toExponential(3)
+                  variant.allele_freq !== null
+                    ? variant.allele_freq.toExponential(3)
                     : 'N/A'
                 }
               />
             </div>
           </div>
 
-          {/* Raw Annotations */}
-          {variant.raw_annotations &&
-            Object.keys(variant.raw_annotations).length > 0 && (
-              <div>
-                <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">
-                  Raw Annotations
-                </h3>
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-200 dark:border-slate-700 max-h-64 overflow-y-auto transition-colors duration-200">
-                  <pre className="text-xs font-mono text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
-                    {JSON.stringify(variant.raw_annotations, null, 2)}
-                  </pre>
-                </div>
+          {/* Additional Information */}
+          {(variant.rs_id || variant.transcript_id || variant.protein_change) && (
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-slate-100 mb-3">
+                Additional Information
+              </h3>
+              <div className="grid md:grid-cols-2 gap-4">
+                {variant.rs_id && <InfoItem label="dbSNP ID" value={variant.rs_id} />}
+                {variant.transcript_id && <InfoItem label="Transcript" value={variant.transcript_id} />}
+                {variant.protein_change && <InfoItem label="Protein Change" value={variant.protein_change} />}
+                {variant.gnomad_af !== null && (
+                  <InfoItem label="gnomAD AF" value={variant.gnomad_af.toExponential(3)} />
+                )}
               </div>
-            )}
+            </div>
+          )}
 
           {/* Metadata */}
           <div className="border-t border-slate-200 dark:border-slate-700 pt-4">

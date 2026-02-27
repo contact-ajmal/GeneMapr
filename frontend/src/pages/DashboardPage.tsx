@@ -17,9 +17,21 @@ export default function DashboardPage() {
 
   const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['variants', page, filters],
-    queryFn: () => getVariants(page, PAGE_SIZE, filters),
+    queryFn: async () => {
+      console.log('DashboardPage: Starting query for variants', { page, PAGE_SIZE, filters })
+      try {
+        const result = await getVariants(page, PAGE_SIZE, filters)
+        console.log('DashboardPage: Query successful', result)
+        return result
+      } catch (err) {
+        console.error('DashboardPage: Query failed', err)
+        throw err
+      }
+    },
     staleTime: 1000 * 60 * 5, // 5 minutes
   })
+
+  console.log('DashboardPage render:', { isLoading, hasData: !!data, error, dataKeys: data ? Object.keys(data) : null })
 
   const handleExport = async () => {
     try {
