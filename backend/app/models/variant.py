@@ -1,6 +1,6 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Integer, Float, DateTime, Text
+from sqlalchemy import String, Integer, Float, DateTime, Text, ForeignKey
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.dialects.postgresql import UUID
 
@@ -64,6 +64,11 @@ class Variant(Base):
 
     # Scoring and AI summary
     risk_score: Mapped[int] = mapped_column(Integer, nullable=True, index=True)
+    scoring_profile_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("scoring_profiles.id"),
+        nullable=True,
+    )
     ai_summary: Mapped[str] = mapped_column(Text, nullable=True)
 
     # Metadata

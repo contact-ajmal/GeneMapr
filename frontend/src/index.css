@@ -189,3 +189,40 @@ body {
   background-size: 1000px 100%;
   animation: shimmer 2s infinite linear;
 }
+
+/* Custom range slider thumb */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 6px;
+  border-radius: 3px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid rgba(0, 212, 255, 0.5);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+  transition: box-shadow 0.2s, transform 0.15s;
+}
+
+input[type="range"]::-webkit-slider-thumb:hover {
+  box-shadow: 0 0 14px rgba(0, 212, 255, 0.5);
+  transform: scale(1.15);
+}
+
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  border: 2px solid rgba(0, 212, 255, 0.5);
+  cursor: pointer;
+  box-shadow: 0 0 8px rgba(0, 212, 255, 0.3);
+}

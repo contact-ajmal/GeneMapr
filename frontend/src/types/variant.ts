@@ -139,3 +139,35 @@ export interface VariantStats {
   risk_score_distribution: DistributionItem[]
   af_distribution: DistributionItem[]
 }
+
+// Scoring Profile types
+export interface ScoringWeights {
+  pathogenic: number
+  likely_pathogenic: number
+  vus: number
+  rare_af_threshold: number
+  rare_bonus: number
+  ultra_rare_af_threshold: number
+  ultra_rare_bonus: number
+  lof_bonus: number
+  missense_bonus: number
+  synonymous_bonus: number
+  splice_site_bonus: number
+  inframe_indel_bonus: number
+  custom_gene_weights: Record<string, number>
+}
+
+export interface ScoringProfile {
+  id: string
+  name: string
+  description: string | null
+  is_default: boolean
+  weights: ScoringWeights
+  created_at: string
+}
+
+export interface RescoreResponse {
+  status: string
+  variants_rescored: number
+  profile_name: string
+}

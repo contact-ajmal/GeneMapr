@@ -15,6 +15,8 @@ import { SkeletonTable } from '../components/ui/Skeleton'
 import { useToast } from '../components/ui/Toast'
 import { useScrollReveal, scrollRevealVariants } from '../hooks/useScrollReveal'
 import ReportGeneratorModal from '../components/ReportGeneratorModal'
+import ProfileSelector from '../components/ProfileSelector'
+import ScoringProfileManager from '../components/ScoringProfileManager'
 import { Download, TrendingUp, AlertTriangle, HelpCircle, Activity, CheckCircle2, FileText, Dna, ChevronDown } from 'lucide-react'
 
 const PAGE_SIZE = 50
@@ -68,6 +70,7 @@ export default function DashboardPage() {
   const [exportSuccess, setExportSuccess] = useState(false)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
   const [showGenomeView, setShowGenomeView] = useState(false)
+  const [isProfileManagerOpen, setIsProfileManagerOpen] = useState(false)
   const { toast } = useToast()
 
   // Fetch variant stats for KPI cards
@@ -210,6 +213,10 @@ export default function DashboardPage() {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.3, duration: 0.4 }}
           >
+            <ProfileSelector
+              onManageProfiles={() => setIsProfileManagerOpen(true)}
+              onRescored={() => refetch()}
+            />
             <AnimatedButton
               onClick={() => setIsReportModalOpen(true)}
               disabled={!data?.variants.length}
@@ -450,6 +457,13 @@ export default function DashboardPage() {
         isOpen={isReportModalOpen}
         onClose={() => setIsReportModalOpen(false)}
         variantCount={data?.total || 0}
+      />
+
+      {/* Scoring Profile Manager Modal */}
+      <ScoringProfileManager
+        isOpen={isProfileManagerOpen}
+        onClose={() => setIsProfileManagerOpen(false)}
+        onProfileApplied={() => refetch()}
       />
     </PageTransition>
   )
