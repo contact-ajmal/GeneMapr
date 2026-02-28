@@ -1,5 +1,5 @@
 import apiClient from './client'
-import type { PaginatedVariants, VariantFilters, UploadResponse, VariantStats } from '../types/variant'
+import type { PaginatedVariants, VariantFilters, UploadResponse, VariantStats, GenomeViewData } from '../types/variant'
 
 export const uploadVCF = async (file: File): Promise<UploadResponse> => {
   const formData = new FormData()
@@ -70,5 +70,23 @@ export const exportVariantsCSV = async (filters?: VariantFilters): Promise<Blob>
 
 export const getVariantStats = async (): Promise<VariantStats> => {
   const response = await apiClient.get<VariantStats>('/variants/stats')
+  return response.data
+}
+
+export const getGenomeView = async (filters?: VariantFilters): Promise<GenomeViewData> => {
+  const params: Record<string, any> = {}
+
+  if (filters) {
+    if (filters.gene) params.gene = filters.gene
+    if (filters.clinvar_significance) params.significance = filters.clinvar_significance
+    if (filters.af_max !== undefined) params.af_max = filters.af_max
+    if (filters.consequence && filters.consequence.length > 0) {
+      params.consequence = filters.consequence.join(',')
+    }
+    if (filters.risk_score_min !== undefined) params.min_score = filters.risk_score_min
+    if (filters.risk_score_max !== undefined) params.max_score = filters.risk_score_max
+  }
+
+  const response = await apiClient.get<GenomeViewData>('/variants/genome-view', { params })
   return response.data
 }

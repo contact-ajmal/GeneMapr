@@ -94,3 +94,29 @@ class VariantStatsResponse(BaseModel):
     clinvar_distribution: list[DistributionItem]
     risk_score_distribution: list[DistributionItem]
     af_distribution: list[DistributionItem]
+
+
+# --- Genome View Schemas ---
+
+class GenomeAnnotation(BaseModel):
+    name: str
+    chr: str
+    start: int
+    stop: int
+    risk_score: int | None = None
+    clinvar_significance: str | None = None
+    consequence: str | None = None
+    gene: str | None = None
+    allele_frequency: float | None = None
+    variant_id: str
+
+
+class ChromosomeSummary(BaseModel):
+    count: int
+    max_risk: int
+    pathogenic: int
+
+
+class GenomeViewResponse(BaseModel):
+    annotations: list[GenomeAnnotation]
+    chromosome_summary: dict[str, ChromosomeSummary]

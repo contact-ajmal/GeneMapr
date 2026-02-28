@@ -17,7 +17,10 @@ from app.schemas.variant import (
     VariantListResponse,
     VariantStatsResponse,
     TopGene,
-    DistributionItem
+    DistributionItem,
+    GenomeViewResponse,
+    GenomeAnnotation,
+    ChromosomeSummary,
 )
 from app.services.vcf_parser import parse_and_store_vcf
 from app.services.annotation_service import annotate_variants_by_upload_id
@@ -483,6 +486,84 @@ async def export_variants_csv(
         headers={
             "Content-Disposition": "attachment; filename=variants_export.csv"
         }
+    )
+
+
+@router.get("/genome-view", response_model=GenomeViewResponse)
+async def get_genome_view(
+    gene: str | None = Query(None, description="Filter by gene symbol"),
+    significance: str | None = Query(None, description="Filter by ClinVar significance"),
+    af_max: float | None = Query(None, ge=0, le=1, description="Maximum allele frequency"),
+    consequence: str | None = Query(None, description="Filter by consequence type"),
+    min_score: int | None = Query(None, ge=0, description="Minimum risk score"),
+    max_score: int | None = Query(None, ge=0, description="Maximum risk score"),
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Get variants formatted for genome ideogram visualization.
+
+    Returns annotations array and per-chromosome summary statistics.
+    """
+    query = select(Variant)
+
+    if gene:
+        query = query.where(Variant.gene_symbol == gene)
+    if significance:
+        query = query.where(Variant.clinvar_significance.ilike(f"%{significance}%"))
+    if af_max is not None:
+        query = query.where(Variant.gnomad_af <= af_max)
+    if consequence:
+        query = query.where(Variant.consequence.ilike(f"%{consequence}%"))
+    if min_score is not None:
+        query = query.where(Variant.risk_score >= min_score)
+    if max_score is not None:
+        query = query.where(Variant.risk_score <= max_score)
+
+    query = query.order_by(Variant.chrom, Variant.pos)
+    result = await db.execute(query)
+    variants = result.scalars().all()
+
+    annotations: list[GenomeAnnotation] = []
+    summary: dict[str, dict] = {}
+
+    for v in variants:
+        chrom = v.chrom.replace("chr", "")
+        label = v.gene_symbol or ""
+        if v.protein_change:
+            label = f"{label} {v.protein_change}".strip()
+        if not label:
+            label = f"{chrom}:{v.pos}"
+
+        annotations.append(GenomeAnnotation(
+            name=label,
+            chr=chrom,
+            start=v.pos,
+            stop=v.pos + max(len(v.ref), 1),
+            risk_score=v.risk_score,
+            clinvar_significance=v.clinvar_significance,
+            consequence=v.consequence,
+            gene=v.gene_symbol,
+            allele_frequency=v.gnomad_af,
+            variant_id=str(v.id),
+        ))
+
+        if chrom not in summary:
+            summary[chrom] = {"count": 0, "max_risk": 0, "pathogenic": 0}
+        summary[chrom]["count"] += 1
+        summary[chrom]["max_risk"] = max(
+            summary[chrom]["max_risk"], v.risk_score or 0
+        )
+        sig = (v.clinvar_significance or "").lower()
+        if "pathogenic" in sig and "benign" not in sig:
+            summary[chrom]["pathogenic"] += 1
+
+    chromosome_summary = {
+        k: ChromosomeSummary(**v) for k, v in summary.items()
+    }
+
+    return GenomeViewResponse(
+        annotations=annotations,
+        chromosome_summary=chromosome_summary,
     )
 
 

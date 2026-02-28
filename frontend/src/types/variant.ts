@@ -62,6 +62,31 @@ export interface DistributionItem {
   count: number
 }
 
+// Genome View types
+export interface GenomeAnnotation {
+  name: string
+  chr: string
+  start: number
+  stop: number
+  risk_score: number | null
+  clinvar_significance: string | null
+  consequence: string | null
+  gene: string | null
+  allele_frequency: number | null
+  variant_id: string
+}
+
+export interface ChromosomeSummary {
+  count: number
+  max_risk: number
+  pathogenic: number
+}
+
+export interface GenomeViewData {
+  annotations: GenomeAnnotation[]
+  chromosome_summary: Record<string, ChromosomeSummary>
+}
+
 export interface VariantStats {
   total_variants: number
   pathogenic_count: number

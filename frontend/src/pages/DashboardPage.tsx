@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { motion } from 'framer-motion'
-import { getVariants, exportVariantsCSV, getVariantStats } from '../api/variants'
+import { motion, AnimatePresence } from 'framer-motion'
+import { getVariants, exportVariantsCSV, getVariantStats, getGenomeView } from '../api/variants'
 import type { Variant, VariantFilters } from '../types/variant'
 import FilterPanel from '../components/FilterPanel'
 import VariantTable from '../components/VariantTable'
 import VariantDetailModal from '../components/VariantDetailModal'
+import GenomeVisualization from '../components/GenomeVisualization'
 import PageTransition from '../components/PageTransition'
 import GlassCard from '../components/ui/GlassCard'
 import AnimatedButton from '../components/ui/AnimatedButton'
@@ -14,7 +15,7 @@ import { SkeletonTable } from '../components/ui/Skeleton'
 import { useToast } from '../components/ui/Toast'
 import { useScrollReveal, scrollRevealVariants } from '../hooks/useScrollReveal'
 import ReportGeneratorModal from '../components/ReportGeneratorModal'
-import { Download, TrendingUp, AlertTriangle, HelpCircle, Activity, CheckCircle2, FileText } from 'lucide-react'
+import { Download, TrendingUp, AlertTriangle, HelpCircle, Activity, CheckCircle2, FileText, Dna, ChevronDown } from 'lucide-react'
 
 const PAGE_SIZE = 50
 
@@ -66,6 +67,7 @@ export default function DashboardPage() {
   const [isExporting, setIsExporting] = useState(false)
   const [exportSuccess, setExportSuccess] = useState(false)
   const [isReportModalOpen, setIsReportModalOpen] = useState(false)
+  const [showGenomeView, setShowGenomeView] = useState(false)
   const { toast } = useToast()
 
   // Fetch variant stats for KPI cards
@@ -83,6 +85,22 @@ export default function DashboardPage() {
     },
     staleTime: 1000 * 60 * 5,
   })
+
+  // Genome view data (only fetch when panel is open)
+  const { data: genomeData, isLoading: genomeLoading } = useQuery({
+    queryKey: ['genomeView', filters],
+    queryFn: () => getGenomeView(filters),
+    staleTime: 1000 * 60 * 5,
+    enabled: showGenomeView,
+  })
+
+  const handleGenomeVariantClick = (variantId: string) => {
+    // Find the variant in current page data, or fetch it
+    const found = data?.variants.find((v) => v.id === variantId)
+    if (found) {
+      setSelectedVariant(found)
+    }
+  }
 
   const handleExport = async () => {
     try {
@@ -249,6 +267,69 @@ export default function DashboardPage() {
             </div>
           </ScrollRevealSection>
         )}
+
+        {/* Genome View - Collapsible Section */}
+        <ScrollRevealSection index={1}>
+          <GlassCard variant="default" className="overflow-hidden">
+            {/* Toggle Header */}
+            <button
+              onClick={() => setShowGenomeView((v) => !v)}
+              className="w-full flex items-center justify-between px-6 py-4 group hover:bg-white/[0.02] transition-colors"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg bg-dna-cyan/10 flex items-center justify-center border border-dna-cyan/20 group-hover:border-dna-cyan/40 transition-colors">
+                  <Dna className="w-4 h-4 text-dna-cyan" />
+                </div>
+                <span className="text-sm font-headline font-semibold text-slate-200">
+                  Genome View
+                </span>
+                <span className="text-xs text-slate-500 font-body">
+                  Interactive chromosome ideogram
+                </span>
+              </div>
+              <motion.div
+                animate={{ rotate: showGenomeView ? 180 : 0 }}
+                transition={{ duration: 0.2 }}
+              >
+                <ChevronDown className="w-4 h-4 text-slate-400" />
+              </motion.div>
+            </button>
+
+            {/* Collapsible Content */}
+            <AnimatePresence>
+              {showGenomeView && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: 'auto', opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  className="overflow-hidden"
+                >
+                  <div className="px-6 pb-6 pt-2">
+                    {genomeLoading ? (
+                      <div className="flex items-center justify-center py-16">
+                        <div className="flex items-center gap-3">
+                          <div className="w-5 h-5 border-2 border-dna-cyan/30 border-t-dna-cyan rounded-full animate-spin" />
+                          <span className="text-sm text-slate-400 font-body">Loading genome view...</span>
+                        </div>
+                      </div>
+                    ) : genomeData && genomeData.annotations.length > 0 ? (
+                      <GenomeVisualization
+                        annotations={genomeData.annotations}
+                        chromosomeSummary={genomeData.chromosome_summary}
+                        onVariantClick={handleGenomeVariantClick}
+                      />
+                    ) : (
+                      <div className="flex items-center justify-center py-12 text-slate-500 text-sm font-body">
+                        Upload a VCF file to visualize variants across the genome
+                      </div>
+                    )}
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </GlassCard>
+        </ScrollRevealSection>
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-4 gap-6">
