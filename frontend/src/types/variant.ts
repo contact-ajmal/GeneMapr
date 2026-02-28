@@ -171,3 +171,70 @@ export interface RescoreResponse {
   variants_rescored: number
   profile_name: string
 }
+
+// Sample & Comparison types
+export interface Sample {
+  id: string
+  name: string
+  filename: string
+  relationship_type: string | null
+  upload_id: string
+  created_at: string
+  variant_count: number
+}
+
+export interface SampleStats {
+  sample_id: string
+  name: string
+  total: number
+  pathogenic_count: number
+  likely_pathogenic_count: number
+  vus_count: number
+  mean_risk: number
+}
+
+export interface SharedVariant {
+  variant: Variant
+  present_in: string[]
+}
+
+export interface InheritancePattern {
+  variant_id: string
+  gene: string | null
+  chrom: string
+  pos: number
+  ref: string
+  alt: string
+  clinvar_significance: string | null
+  risk_score: number | null
+  proband: boolean
+  mother: boolean
+  father: boolean
+  inheritance: string
+}
+
+export interface CompoundHet {
+  gene: string
+  variant_a: Variant
+  variant_b: Variant
+  source_a: string
+  source_b: string
+}
+
+export interface ComparisonResult {
+  shared_variants: SharedVariant[]
+  unique_variants: Record<string, Variant[]>
+  sample_stats: SampleStats[]
+  inheritance_patterns: InheritancePattern[]
+  compound_hets: CompoundHet[]
+  ai_summary: string | null
+}
+
+export interface UploadWithSampleResponse {
+  status: string
+  variant_count: number
+  upload_id: string
+  sample_id: string
+  sample_name: string
+  message: string
+}

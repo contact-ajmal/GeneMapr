@@ -8,6 +8,7 @@ import os
 # Import your app models and Base
 from app.core.database import Base
 from app.models.variant import Variant
+from app.models.sample import Sample
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.

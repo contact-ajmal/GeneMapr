@@ -11,7 +11,8 @@ from app.utils.normalization import normalize_variant, parse_info_field
 async def parse_and_store_vcf(
     vcf_path: Path,
     db: AsyncSession,
-    upload_id: str = None
+    upload_id: str = None,
+    sample_id: uuid.UUID = None,
 ) -> tuple[int, str]:
     """
     Parse VCF file and store variants in database.
@@ -20,6 +21,7 @@ async def parse_and_store_vcf(
         vcf_path: Path to VCF file
         db: Database session
         upload_id: Optional upload identifier
+        sample_id: Optional sample UUID to associate variants with
 
     Returns:
         Tuple of (variant_count, upload_id)
@@ -87,16 +89,19 @@ async def parse_and_store_vcf(
                     "allele_freq": allele_freq,
                     "normalized_variant": normalized,
                     "upload_id": upload_id,
+                    "sample_id": sample_id,
                 }
 
                 variants_to_insert.append(variant_data)
                 variant_count += 1
 
         # Bulk insert variants using PostgreSQL INSERT ... ON CONFLICT DO NOTHING
-        # This prevents duplicate variants based on unique normalized_variant
+        # This prevents duplicate variants based on unique (normalized_variant, sample_id)
         if variants_to_insert:
             stmt = insert(Variant).values(variants_to_insert)
-            stmt = stmt.on_conflict_do_nothing(index_elements=["normalized_variant"])
+            stmt = stmt.on_conflict_do_nothing(
+                constraint="uq_variant_sample"
+            )
             await db.execute(stmt)
             await db.commit()
 

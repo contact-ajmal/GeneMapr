@@ -6,6 +6,7 @@ import UploadPage from './pages/UploadPage'
 import DashboardPage from './pages/DashboardPage'
 import AnalyticsPage from './pages/AnalyticsPage'
 import PharmacogenomicsPage from './pages/PharmacogenomicsPage'
+import ComparePage from './pages/ComparePage'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/ui/Toast'
 import ChatPanel from './components/ChatPanel'
@@ -36,6 +37,7 @@ function App() {
               <Route path="/dashboard" element={<DashboardPage />} />
               <Route path="/analytics" element={<AnalyticsPage />} />
               <Route path="/pharmacogenomics" element={<PharmacogenomicsPage />} />
+              <Route path="/compare" element={<ComparePage />} />
             </Routes>
           </AnimatePresence>
         </Layout>

@@ -6,6 +6,7 @@ from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from app.core.database import init_db
 import app.models.scoring_profile  # noqa: F401 - ensure model is registered with Base
+import app.models.sample  # noqa: F401 - ensure model is registered with Base
 from app.core.redis import init_redis, close_redis
 from app.core.config import settings
 from app.api.variants import router as variants_router
@@ -13,6 +14,7 @@ from app.api.chat import router as chat_router
 from app.api.reports import router as reports_router
 from app.api.pharmacogenomics import router as pharmacogenomics_router
 from app.api.scoring_profiles import router as scoring_profiles_router, seed_default_profiles
+from app.api.samples import router as samples_router
 from app.middleware import (
     LoggingMiddleware,
     configure_logging,
@@ -70,6 +72,7 @@ app.include_router(chat_router)
 app.include_router(reports_router)
 app.include_router(pharmacogenomics_router)
 app.include_router(scoring_profiles_router)
+app.include_router(samples_router)
 
 
 @app.get("/health")

@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
-from sqlalchemy import String, Integer, Float, DateTime, Text, ForeignKey
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy import String, Integer, Float, DateTime, Text, ForeignKey, UniqueConstraint
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from sqlalchemy.dialects.postgresql import UUID
 
 from app.core.database import Base
@@ -9,6 +9,9 @@ from app.core.database import Base
 
 class Variant(Base):
     __tablename__ = "variants"
+    __table_args__ = (
+        UniqueConstraint("normalized_variant", "sample_id", name="uq_variant_sample"),
+    )
 
     # Primary key
     id: Mapped[uuid.UUID] = mapped_column(
@@ -35,7 +38,6 @@ class Variant(Base):
         String(500),
         nullable=False,
         index=True,
-        unique=True
     )
 
     # Annotation fields - Ensembl
@@ -70,6 +72,15 @@ class Variant(Base):
         nullable=True,
     )
     ai_summary: Mapped[str] = mapped_column(Text, nullable=True)
+
+    # Sample association
+    sample_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True),
+        ForeignKey("samples.id", ondelete="CASCADE"),
+        nullable=True,
+        index=True,
+    )
+    sample = relationship("Sample", back_populates="variants")
 
     # Metadata
     upload_id: Mapped[str] = mapped_column(String(100), nullable=True, index=True)
