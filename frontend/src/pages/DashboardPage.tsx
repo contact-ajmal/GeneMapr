@@ -5,7 +5,7 @@ import { getVariants, exportVariantsCSV, getVariantStats, getGenomeView } from '
 import type { Variant, VariantFilters } from '../types/variant'
 import FilterPanel from '../components/FilterPanel'
 import VariantTable from '../components/VariantTable'
-import VariantDetailModal from '../components/VariantDetailModal'
+import VariantEvidenceWorkspace from '../components/VariantEvidenceWorkspace'
 import GenomeVisualization from '../components/GenomeVisualization'
 import PageTransition from '../components/PageTransition'
 import GlassCard from '../components/ui/GlassCard'
@@ -442,8 +442,8 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Variant Detail Modal */}
-      <VariantDetailModal variant={selectedVariant} onClose={() => setSelectedVariant(null)} />
+      {/* Variant Evidence Workspace */}
+      <VariantEvidenceWorkspace variant={selectedVariant} onClose={() => setSelectedVariant(null)} />
 
       {/* Report Generator Modal */}
       <ReportGeneratorModal

@@ -13,6 +13,11 @@ from app.core.database import get_db
 from app.models.variant import Variant
 from app.schemas.variant import (
     VariantResponse,
+    VariantDetailResponse,
+    ACMGClassification,
+    ACMGCriterionDetail,
+    PopulationFrequencies,
+    ExternalLinks,
     UploadResponse,
     VariantListResponse,
     VariantStatsResponse,
@@ -24,6 +29,8 @@ from app.schemas.variant import (
 )
 from app.services.vcf_parser import parse_and_store_vcf
 from app.services.annotation_service import annotate_variants_by_upload_id
+from app.services.acmg_service import assess_acmg_criteria
+from app.services.gnomad_service import get_population_frequencies
 
 router = APIRouter(prefix="/variants", tags=["variants"])
 
@@ -567,18 +574,15 @@ async def get_genome_view(
     )
 
 
-@router.get("/{variant_id}", response_model=VariantResponse)
+@router.get("/{variant_id}", response_model=VariantDetailResponse)
 async def get_variant(
     variant_id: UUID,
     db: AsyncSession = Depends(get_db)
 ):
     """
-    Get a single variant by ID with full annotation details.
-
-    Returns complete variant information including all annotation fields
-    from ClinVar, gnomAD, and Ensembl.
+    Get a single variant by ID with full annotation details,
+    ACMG classification, population frequencies, and external links.
     """
-    # Query for the variant
     query = select(Variant).where(Variant.id == variant_id)
     result = await db.execute(query)
     variant = result.scalar_one_or_none()
@@ -589,4 +593,52 @@ async def get_variant(
             detail=f"Variant with ID {variant_id} not found"
         )
 
-    return VariantResponse.model_validate(variant)
+    # Build base response
+    base = VariantResponse.model_validate(variant)
+    response_data = base.model_dump()
+
+    # ACMG classification
+    acmg_raw = assess_acmg_criteria(variant)
+    acmg = ACMGClassification(
+        criteria_met=acmg_raw["criteria_met"],
+        criteria_details={
+            k: ACMGCriterionDetail(**v) for k, v in acmg_raw["criteria_details"].items()
+        },
+        classification=acmg_raw["classification"],
+        classification_reason=acmg_raw["classification_reason"],
+    )
+    response_data["acmg_criteria"] = acmg
+
+    # Population frequencies (try cache first, then live query)
+    try:
+        pop_freq = await get_population_frequencies(
+            variant.chrom, variant.pos, variant.ref, variant.alt
+        )
+        # If we have no population data from the API but do have gnomad_af,
+        # use the stored value as the overall frequency
+        if pop_freq["overall"] is None and variant.gnomad_af is not None:
+            pop_freq["overall"] = variant.gnomad_af
+        response_data["population_frequencies"] = PopulationFrequencies(**pop_freq)
+    except Exception:
+        # Graceful degradation — return what we have from the variant record
+        response_data["population_frequencies"] = PopulationFrequencies(
+            overall=variant.gnomad_af
+        )
+
+    # External links
+    chrom_clean = variant.chrom.replace("chr", "")
+    gene = variant.gene_symbol or ""
+    rs_id = variant.rs_id or ""
+    protein_change = variant.protein_change or ""
+    variant_desc = f"{gene} {protein_change}".strip() if gene else f"{chrom_clean}:{variant.pos}"
+
+    links = ExternalLinks(
+        clinvar=f"https://www.ncbi.nlm.nih.gov/clinvar/?term={chrom_clean}[chr]+AND+{variant.pos}[chrpos37]" if variant.pos else None,
+        gnomad=f"https://gnomad.broadinstitute.org/variant/{chrom_clean}-{variant.pos}-{variant.ref}-{variant.alt}?dataset=gnomad_r4",
+        ensembl=f"https://www.ensembl.org/Homo_sapiens/Variation/Explore?v={rs_id}" if rs_id else None,
+        pubmed=f"https://pubmed.ncbi.nlm.nih.gov/?term={variant_desc.replace(' ', '+')}",
+        uniprot=f"https://www.uniprot.org/uniprotkb?query={gene}+AND+organism_id:9606" if gene else None,
+    )
+    response_data["external_links"] = links
+
+    return VariantDetailResponse(**response_data)

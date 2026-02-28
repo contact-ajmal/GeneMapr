@@ -96,6 +96,45 @@ class VariantStatsResponse(BaseModel):
     af_distribution: list[DistributionItem]
 
 
+# --- ACMG Classification Schemas ---
+
+class ACMGCriterionDetail(BaseModel):
+    met: bool
+    evidence: str = ""
+    strength: str = ""
+
+
+class ACMGClassification(BaseModel):
+    criteria_met: list[str]
+    criteria_details: dict[str, ACMGCriterionDetail]
+    classification: str
+    classification_reason: str
+
+
+class PopulationFrequencies(BaseModel):
+    overall: float | None = None
+    african: float | None = None
+    east_asian: float | None = None
+    european: float | None = None
+    latino: float | None = None
+    south_asian: float | None = None
+
+
+class ExternalLinks(BaseModel):
+    clinvar: str | None = None
+    gnomad: str | None = None
+    ensembl: str | None = None
+    pubmed: str | None = None
+    uniprot: str | None = None
+
+
+class VariantDetailResponse(VariantResponse):
+    """Extended variant response with ACMG, population data, and external links."""
+    acmg_criteria: ACMGClassification | None = None
+    population_frequencies: PopulationFrequencies | None = None
+    external_links: ExternalLinks | None = None
+
+
 # --- Genome View Schemas ---
 
 class GenomeAnnotation(BaseModel):

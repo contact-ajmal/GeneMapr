@@ -28,6 +28,42 @@ export interface Variant {
   created_at: string
 }
 
+export interface ACMGCriterionDetail {
+  met: boolean
+  evidence: string
+  strength: string
+}
+
+export interface ACMGClassification {
+  criteria_met: string[]
+  criteria_details: Record<string, ACMGCriterionDetail>
+  classification: string
+  classification_reason: string
+}
+
+export interface PopulationFrequencies {
+  overall: number | null
+  african: number | null
+  east_asian: number | null
+  european: number | null
+  latino: number | null
+  south_asian: number | null
+}
+
+export interface ExternalLinks {
+  clinvar: string | null
+  gnomad: string | null
+  ensembl: string | null
+  pubmed: string | null
+  uniprot: string | null
+}
+
+export interface VariantDetail extends Variant {
+  acmg_criteria: ACMGClassification | null
+  population_frequencies: PopulationFrequencies | null
+  external_links: ExternalLinks | null
+}
+
 export interface VariantFilters {
   gene?: string
   clinvar_significance?: string

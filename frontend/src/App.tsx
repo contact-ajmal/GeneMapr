@@ -9,7 +9,7 @@ import PharmacogenomicsPage from './pages/PharmacogenomicsPage'
 import ErrorBoundary from './components/ErrorBoundary'
 import { ToastProvider } from './components/ui/Toast'
 import ChatPanel from './components/ChatPanel'
-import VariantDetailModal from './components/VariantDetailModal'
+import VariantEvidenceWorkspace from './components/VariantEvidenceWorkspace'
 import type { Variant } from './types/variant'
 import apiClient from './api/client'
 
@@ -40,7 +40,7 @@ function App() {
           </AnimatePresence>
         </Layout>
         <ChatPanel onVariantClick={handleVariantClick} />
-        <VariantDetailModal
+        <VariantEvidenceWorkspace
           variant={chatVariant}
           onClose={() => setChatVariant(null)}
         />
