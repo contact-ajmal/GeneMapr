@@ -15,7 +15,7 @@ export default function AnalyticsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <DecodeText text="Genomic Analytics" speed={20} />
+            <DecodeText text="Genome Analytics" speed={20} />
           </motion.h1>
           <motion.p
             className="text-sm text-slate-400 font-body"

@@ -122,6 +122,47 @@ export function SkeletonCharts() {
   )
 }
 
+export function SkeletonPage() {
+  return (
+    <div className="space-y-6 animate-fade-in">
+      {/* KPI row */}
+      <div className="grid grid-cols-1 md:grid-cols-3 xl:grid-cols-5 gap-4">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <motion.div
+            key={i}
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: i * 0.06 }}
+          >
+            <div className="glass-panel rounded-xl p-6 space-y-3">
+              <ShimmerBlock className="h-3 w-1/2" />
+              <ShimmerBlock className="h-7 w-2/3" />
+            </div>
+          </motion.div>
+        ))}
+      </div>
+      {/* Content area */}
+      <div className="glass-panel-elevated rounded-xl p-6 space-y-4">
+        <ShimmerBlock className="h-5 w-1/4" />
+        <div className="grid grid-cols-12 gap-4">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div key={i} className="col-span-12 grid grid-cols-12 gap-4 py-3">
+              <ShimmerBlock className="col-span-1 h-4" />
+              <ShimmerBlock className="col-span-2 h-4" />
+              <ShimmerBlock className="col-span-1 h-4" />
+              <ShimmerBlock className="col-span-2 h-4" />
+              <ShimmerBlock className="col-span-2 h-4" />
+              <ShimmerBlock className="col-span-2 h-4" />
+              <ShimmerBlock className="col-span-1 h-4" />
+              <ShimmerBlock className="col-span-1 h-4" />
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function SkeletonTable({ rows = 8 }: { rows?: number }) {
   return (
     <div className="glass-panel-elevated rounded-xl overflow-hidden">

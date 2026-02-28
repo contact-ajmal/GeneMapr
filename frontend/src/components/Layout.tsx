@@ -1,27 +1,76 @@
-import { Link, useLocation } from 'react-router-dom'
-import { useTheme } from '../contexts/ThemeContext'
+import { useState, useEffect, useCallback } from 'react'
 import { motion } from 'framer-motion'
 import DNAHelix from './backgrounds/DNAHelix'
 import ParticleField from './backgrounds/ParticleField'
 import TopLoadingBar from './ui/TopLoadingBar'
-import DecodeText from './ui/DecodeText'
-import { Upload, BarChart3, Activity, Pill, GitCompareArrows, Moon, Sun } from 'lucide-react'
+import Sidebar, { SIDEBAR_EXPANDED_WIDTH, SIDEBAR_COLLAPSED_WIDTH } from './Sidebar'
+import MobileNav from './MobileNav'
+import TopHeader from './TopHeader'
+import CommandPalette from './CommandPalette'
+import WelcomeModal from './WelcomeModal'
+import type { Variant } from '../types/variant'
 
 interface LayoutProps {
   children: React.ReactNode
+  onVariantSelect?: (variant: Variant) => void
+  activeProfile?: string | null
 }
 
-export default function Layout({ children }: LayoutProps) {
-  const location = useLocation()
-  const { theme, toggleTheme } = useTheme()
+function useIsDesktop() {
+  const [isDesktop, setIsDesktop] = useState(
+    typeof window !== 'undefined' ? window.innerWidth >= 1024 : true
+  )
 
-  const navItems = [
-    { path: '/', label: 'Upload', icon: Upload },
-    { path: '/dashboard', label: 'Dashboard', icon: BarChart3 },
-    { path: '/analytics', label: 'Analytics', icon: Activity },
-    { path: '/pharmacogenomics', label: 'PGx', icon: Pill },
-    { path: '/compare', label: 'Compare', icon: GitCompareArrows },
-  ]
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1024px)')
+    const handler = (e: MediaQueryListEvent) => setIsDesktop(e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
+
+  return isDesktop
+}
+
+export default function Layout({ children, onVariantSelect, activeProfile }: LayoutProps) {
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false)
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_EXPANDED_WIDTH)
+  const isDesktop = useIsDesktop()
+
+  // Watch sidebar state to adjust content offset
+  useEffect(() => {
+    const checkSidebar = () => {
+      const collapsed = localStorage.getItem('genemaprsidebar_collapsed') === 'true'
+      setSidebarWidth(collapsed ? SIDEBAR_COLLAPSED_WIDTH : SIDEBAR_EXPANDED_WIDTH)
+    }
+
+    checkSidebar()
+    // Listen for storage changes (sidebar toggle)
+    window.addEventListener('storage', checkSidebar)
+
+    // Poll for sidebar changes since same-tab storage events don't fire
+    const interval = setInterval(checkSidebar, 200)
+
+    return () => {
+      window.removeEventListener('storage', checkSidebar)
+      clearInterval(interval)
+    }
+  }, [])
+
+  // Global keyboard shortcut: Cmd/Ctrl+K
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault()
+        setCommandPaletteOpen((prev) => !prev)
+      }
+    }
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [])
+
+  const handleOpenCommandPalette = useCallback(() => {
+    setCommandPaletteOpen(true)
+  }, [])
 
   return (
     <div className="min-h-screen">
@@ -34,153 +83,68 @@ export default function Layout({ children }: LayoutProps) {
       {/* Particle Field Background */}
       <ParticleField />
 
-      {/* Glass Navigation Bar */}
-      <nav className="glass-panel-elevated sticky top-0 z-40 border-b border-dna-cyan/10">
-        <div className="container mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            {/* Logo & Brand */}
-            <Link to="/" className="flex items-center space-x-3 group">
-              <motion.div
-                className="w-10 h-10 bg-gradient-to-br from-dna-cyan to-blue-600 rounded-xl flex items-center justify-center shadow-glow-cyan"
-                whileHover={{ scale: 1.05, rotate: 5 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <svg
-                  className="w-6 h-6 text-white"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
-              </motion.div>
-              <div>
-                <h1 className="text-lg font-headline font-bold text-slate-100 group-hover:text-dna-cyan transition-colors">
-                  <DecodeText text="GeneMapr" trigger="hover" speed={20} />
-                </h1>
-              </div>
-            </Link>
+      {/* Sidebar (desktop) */}
+      <Sidebar />
 
-            {/* Navigation Links */}
-            <div className="flex items-center space-x-2">
-              {navItems.map((item) => {
-                const isActive = location.pathname === item.path
-                const Icon = item.icon
+      {/* Top Header */}
+      <TopHeader
+        sidebarWidth={isDesktop ? sidebarWidth : 0}
+        onOpenCommandPalette={handleOpenCommandPalette}
+        activeProfile={activeProfile}
+      />
 
-                return (
-                  <Link key={item.path} to={item.path}>
-                    <motion.div
-                      className={`
-                        relative px-4 py-2 rounded-lg font-body font-medium text-sm
-                        flex items-center space-x-2
-                        transition-all duration-200
-                        ${
-                          isActive
-                            ? 'glass-panel-interactive text-dna-cyan shadow-glow-cyan'
-                            : 'text-slate-400 hover:text-slate-200 hover:bg-white/5'
-                        }
-                      `}
-                      whileHover={{ scale: 1.02 }}
-                      whileTap={{ scale: 0.98 }}
-                    >
-                      {/* Active indicator */}
-                      {isActive && (
-                        <motion.div
-                          className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-dna-cyan to-dna-magenta rounded-r"
-                          layoutId="activeNav"
-                          transition={{ type: 'spring', stiffness: 500, damping: 30 }}
-                        />
-                      )}
-
-                      {/* Hover underline for inactive items */}
-                      {!isActive && (
-                        <motion.div
-                          className="absolute bottom-0 left-2 right-2 h-0.5 bg-dna-cyan/50 rounded-full origin-left"
-                          initial={{ scaleX: 0 }}
-                          whileHover={{ scaleX: 1 }}
-                          transition={{ duration: 0.2 }}
-                        />
-                      )}
-
-                      <Icon className="w-4 h-4" />
-                      <span>{item.label}</span>
-
-                      {/* Glow effect on active */}
-                      {isActive && (
-                        <motion.div
-                          className="absolute inset-0 bg-dna-cyan/5 rounded-lg -z-10"
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          transition={{ duration: 0.3 }}
-                        />
-                      )}
-                    </motion.div>
-                  </Link>
-                )
-              })}
-            </div>
-
-            {/* Right Section */}
-            <div className="flex items-center space-x-4">
-              {/* Tagline */}
-              <p className="text-sm text-slate-500 hidden lg:block font-body">
-                Premium Genomic Analysis Platform
-              </p>
-
-              {/* Theme Toggle */}
-              <motion.button
-                onClick={toggleTheme}
-                className="p-2.5 rounded-lg glass-panel hover:glass-panel-interactive transition-all"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                aria-label="Toggle theme"
-              >
-                {theme === 'light' ? (
-                  <Moon className="w-5 h-5 text-slate-400" />
-                ) : (
-                  <Sun className="w-5 h-5 text-dna-cyan" />
-                )}
-              </motion.button>
-            </div>
-          </div>
-        </div>
-      </nav>
+      {/* Mobile Bottom Nav */}
+      <MobileNav />
 
       {/* Main Content */}
-      <main className="container mx-auto px-6 py-8 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          {children}
-        </motion.div>
-      </main>
+      <motion.main
+        className="relative z-10 pt-14 pb-20 lg:pb-8 min-h-screen"
+        animate={{
+          paddingLeft: isDesktop ? sidebarWidth : 0,
+        }}
+        transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      >
+        <div className="container mx-auto px-6 py-6 max-w-[1600px]">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+          >
+            {children}
+          </motion.div>
+        </div>
 
-      {/* Footer */}
-      <footer className="relative z-10 mt-auto py-6 glass-panel border-t border-dna-cyan/5">
-        <div className="container mx-auto px-6">
-          <div className="flex items-center justify-between text-sm text-slate-500">
-            <p className="font-body">
-              © 2026 GeneMapr. Premium Variant Interpretation.
-            </p>
-            <div className="flex items-center space-x-4">
-              <span className="px-2 py-1 rounded bg-dna-cyan/10 text-dna-cyan text-xs font-mono-variant">
-                v2.0
-              </span>
-              <span className="text-slate-600">•</span>
-              <span className="font-mono-variant text-xs">
-                Powered by Claude Sonnet 4.5
-              </span>
+        {/* Footer */}
+        <footer className="mt-auto py-4 border-t border-dna-cyan/5">
+          <div className="container mx-auto px-6 max-w-[1600px]">
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-500">
+              <p className="font-body flex items-center gap-2">
+                <span className="px-1.5 py-0.5 rounded bg-dna-cyan/10 text-dna-cyan font-mono text-[10px]">
+                  v1.0
+                </span>
+                GeneMapr | For Research Use Only
+              </p>
+              <div className="flex items-center gap-4 font-body">
+                <button className="hover:text-slate-300 transition-colors">Documentation</button>
+                <span className="text-slate-700">|</span>
+                <button className="hover:text-slate-300 transition-colors">About</button>
+                <span className="text-slate-700">|</span>
+                <button className="hover:text-slate-300 transition-colors">GitHub</button>
+              </div>
             </div>
           </div>
-        </div>
-      </footer>
+        </footer>
+      </motion.main>
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={commandPaletteOpen}
+        onClose={() => setCommandPaletteOpen(false)}
+        onVariantSelect={onVariantSelect}
+      />
+
+      {/* Welcome Modal (first visit) */}
+      <WelcomeModal />
     </div>
   )
 }

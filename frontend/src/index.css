@@ -156,6 +156,20 @@ body {
   }
 }
 
+/* Sidebar layout utilities */
+@layer components {
+  .safe-area-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
+
+/* Responsive sidebar content offset */
+@media (max-width: 1023px) {
+  main {
+    padding-left: 0 !important;
+  }
+}
+
 /* DNA Helix perspective container */
 .perspective-container {
   perspective: 1000px;
