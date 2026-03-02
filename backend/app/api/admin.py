@@ -292,3 +292,156 @@ async def delete_role(
 async def get_all_permissions():
     """Get the full catalog of available permissions."""
     return ALL_PERMISSIONS
+
+
+# ═══════════════════════════════════════════════════════
+# LLM CONFIGURATION
+# ═══════════════════════════════════════════════════════
+
+from app.models.llm_config import LLMConfig
+from app.schemas.llm_config import (
+    LLMConfigResponse,
+    LLMConfigUpdate,
+    LLMProviderPreset,
+    LLM_PROVIDER_PRESETS,
+)
+
+
+@router.get("/llm-config", response_model=LLMConfigResponse)
+async def get_llm_config(db: AsyncSession = Depends(get_db)):
+    """Get the active LLM configuration."""
+    result = await db.execute(select(LLMConfig).where(LLMConfig.is_active == True).limit(1))
+    config = result.scalar_one_or_none()
+
+    if not config:
+        # Return defaults from env
+        from app.core.config import settings as app_settings
+        return LLMConfigResponse(
+            id=None,
+            provider="openrouter",
+            model_id=app_settings.llm_model,
+            display_name="Default (from environment)",
+            api_key_set=bool(app_settings.llm_api_key and app_settings.llm_api_key != "stub"),
+            base_url=app_settings.llm_base_url,
+            temperature=0.4,
+            max_tokens=1000,
+            updated_at=None,
+            updated_by=None,
+        )
+
+    return LLMConfigResponse(
+        id=str(config.id),
+        provider=config.provider,
+        model_id=config.model_id,
+        display_name=config.display_name,
+        api_key_set=bool(config.api_key),
+        base_url=config.base_url,
+        temperature=config.temperature,
+        max_tokens=config.max_tokens,
+        updated_at=config.updated_at,
+        updated_by=config.updated_by,
+    )
+
+
+@router.put("/llm-config", response_model=LLMConfigResponse)
+async def update_llm_config(
+    data: LLMConfigUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Update or create the active LLM configuration."""
+    result = await db.execute(select(LLMConfig).where(LLMConfig.is_active == True).limit(1))
+    config = result.scalar_one_or_none()
+
+    if not config:
+        config = LLMConfig(is_active=True)
+        db.add(config)
+
+    if data.provider is not None:
+        config.provider = data.provider
+    if data.model_id is not None:
+        config.model_id = data.model_id
+    if data.display_name is not None:
+        config.display_name = data.display_name
+    if data.api_key is not None:
+        config.api_key = data.api_key
+    if data.base_url is not None:
+        config.base_url = data.base_url
+    if data.temperature is not None:
+        config.temperature = data.temperature
+    if data.max_tokens is not None:
+        config.max_tokens = data.max_tokens
+
+    config.updated_by = current_user.email
+
+    await db.commit()
+    await db.refresh(config)
+
+    return LLMConfigResponse(
+        id=str(config.id),
+        provider=config.provider,
+        model_id=config.model_id,
+        display_name=config.display_name,
+        api_key_set=bool(config.api_key),
+        base_url=config.base_url,
+        temperature=config.temperature,
+        max_tokens=config.max_tokens,
+        updated_at=config.updated_at,
+        updated_by=config.updated_by,
+    )
+
+
+@router.post("/llm-config/test")
+async def test_llm_config(
+    data: LLMConfigUpdate,
+    db: AsyncSession = Depends(get_db),
+):
+    """Test an LLM configuration by sending a simple prompt."""
+    import httpx
+
+    api_key = data.api_key or ""
+    base_url = data.base_url or "https://openrouter.ai/api/v1"
+    model_id = data.model_id or "openrouter/auto:free"
+
+    # If no key provided, try to use the stored one
+    if not api_key:
+        result = await db.execute(select(LLMConfig).where(LLMConfig.is_active == True).limit(1))
+        config = result.scalar_one_or_none()
+        if config and config.api_key:
+            api_key = config.api_key
+        else:
+            from app.core.config import settings as app_settings
+            api_key = app_settings.llm_api_key
+
+    if not api_key or api_key == "stub":
+        return {"success": False, "error": "No API key configured"}
+
+    try:
+        async with httpx.AsyncClient(timeout=15.0) as client:
+            response = await client.post(
+                f"{base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {api_key}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": model_id,
+                    "messages": [{"role": "user", "content": "Reply with exactly: OK"}],
+                    "temperature": 0,
+                    "max_tokens": 5,
+                },
+            )
+            response.raise_for_status()
+            result = response.json()
+            reply = result["choices"][0]["message"]["content"].strip()
+            return {"success": True, "reply": reply, "model": model_id}
+    except httpx.HTTPStatusError as e:
+        return {"success": False, "error": f"HTTP {e.response.status_code}: {e.response.text[:200]}"}
+    except Exception as e:
+        return {"success": False, "error": str(e)[:200]}
+
+
+@router.get("/llm-providers", response_model=list[LLMProviderPreset])
+async def get_llm_providers():
+    """Get available LLM provider presets."""
+    return LLM_PROVIDER_PRESETS

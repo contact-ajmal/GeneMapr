@@ -9,6 +9,7 @@ import app.models.scoring_profile  # noqa: F401 - ensure model is registered wit
 import app.models.sample  # noqa: F401 - ensure model is registered with Base
 import app.models.user  # noqa: F401 - ensure model is registered with Base
 import app.models.custom_role  # noqa: F401 - ensure model is registered with Base
+import app.models.llm_config  # noqa: F401 - ensure model is registered with Base
 from app.core.redis import init_redis, close_redis
 from app.core.config import settings
 from app.api.variants import router as variants_router

@@ -344,30 +344,57 @@ async def _call_llm_chat(messages: list[dict]) -> str | None:
     """
     Call LLM with a full messages array for chat conversations.
 
-    Reuses the existing OpenRouter configuration from settings.
+    Reads config from the database (admin-configurable) first,
+    falling back to environment variables if no DB config is saved.
     """
     import httpx
     from app.core.config import settings
+    from app.core.database import AsyncSessionLocal
+    from app.models.llm_config import LLMConfig
 
-    if not settings.llm_api_key or settings.llm_api_key == "stub":
+    # ── Resolve config: DB first, then env ──
+    api_key = settings.llm_api_key
+    base_url = settings.llm_base_url
+    model = settings.llm_model
+    temperature = 0.4
+    max_tokens = 1000
+
+    try:
+        async with AsyncSessionLocal() as db:
+            from sqlalchemy import select
+            result = await db.execute(
+                select(LLMConfig).where(LLMConfig.is_active == True).limit(1)
+            )
+            config = result.scalar_one_or_none()
+            if config:
+                if config.api_key:
+                    api_key = config.api_key
+                base_url = config.base_url
+                model = config.model_id
+                temperature = config.temperature or 0.4
+                max_tokens = config.max_tokens or 1000
+    except Exception as e:
+        logger.warning(f"Could not read LLM config from DB, using env: {e}")
+
+    if not api_key or api_key == "stub":
         logger.info("LLM not configured, returning template response")
         return _generate_fallback_response(messages)
 
-    url = f"{settings.llm_base_url}/chat/completions"
+    url = f"{base_url}/chat/completions"
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
                 url,
                 headers={
-                    "Authorization": f"Bearer {settings.llm_api_key}",
+                    "Authorization": f"Bearer {api_key}",
                     "Content-Type": "application/json",
                 },
                 json={
-                    "model": settings.llm_model,
+                    "model": model,
                     "messages": messages,
-                    "temperature": 0.4,
-                    "max_tokens": 1000,
+                    "temperature": temperature,
+                    "max_tokens": max_tokens,
                 },
             )
             response.raise_for_status()

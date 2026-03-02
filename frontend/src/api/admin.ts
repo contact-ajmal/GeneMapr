@@ -100,3 +100,71 @@ export const getAllPermissions = async (): Promise<Permission[]> => {
     const response = await apiClient.get('/admin/permissions')
     return response.data
 }
+
+// ── LLM Config API ──
+
+export interface LLMConfigResponse {
+    id: string | null
+    provider: string
+    model_id: string
+    display_name: string
+    api_key_set: boolean
+    base_url: string
+    temperature: number
+    max_tokens: number
+    updated_at: string | null
+    updated_by: string | null
+}
+
+export interface LLMConfigUpdate {
+    provider?: string
+    model_id?: string
+    display_name?: string
+    api_key?: string
+    base_url?: string
+    temperature?: number
+    max_tokens?: number
+}
+
+export interface LLMModelOption {
+    id: string
+    name: string
+    context_window: string
+    free: boolean
+}
+
+export interface LLMProviderPreset {
+    provider: string
+    label: string
+    base_url: string
+    description: string
+    models: LLMModelOption[]
+}
+
+export interface LLMTestResult {
+    success: boolean
+    reply?: string
+    model?: string
+    error?: string
+}
+
+export const getLLMConfig = async (): Promise<LLMConfigResponse> => {
+    const response = await apiClient.get('/admin/llm-config')
+    return response.data
+}
+
+export const updateLLMConfig = async (data: LLMConfigUpdate): Promise<LLMConfigResponse> => {
+    const response = await apiClient.put('/admin/llm-config', data)
+    return response.data
+}
+
+export const testLLMConfig = async (data: LLMConfigUpdate): Promise<LLMTestResult> => {
+    const response = await apiClient.post('/admin/llm-config/test', data)
+    return response.data
+}
+
+export const getLLMProviders = async (): Promise<LLMProviderPreset[]> => {
+    const response = await apiClient.get('/admin/llm-providers')
+    return response.data
+}
+

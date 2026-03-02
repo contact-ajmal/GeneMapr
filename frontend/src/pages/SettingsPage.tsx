@@ -4,17 +4,20 @@ import {
     Users, Shield, UserCog, Search, ChevronDown,
     ToggleLeft, ToggleRight, Trash2, Edit3, Check, X,
     Crown, FlaskConical, Eye, Lock, KeyRound, AlertTriangle,
-    UserPlus, Plus, Mail, AtSign,
+    UserPlus, Plus, Mail, AtSign, Brain, Cpu, Zap,
+    CheckCircle2, XCircle, Loader2, EyeOff, Server,
 } from 'lucide-react'
 import { useAuth } from '../contexts/AuthContext'
 import {
     listUsers, updateUser, deleteUser, createUser,
     getRoles, createRole, deleteRole, getAllPermissions,
+    getLLMConfig, updateLLMConfig, testLLMConfig, getLLMProviders,
     type RolePermissions, type Permission,
+    type LLMConfigResponse, type LLMProviderPreset,
 } from '../api/admin'
 import type { UserResponse } from '../api/auth'
 
-type Tab = 'users' | 'roles'
+type Tab = 'users' | 'roles' | 'llm'
 
 const ROLE_COLORS: Record<string, string> = {
     admin: 'text-amber-400 bg-amber-400/10 border-amber-400/30',
@@ -107,6 +110,7 @@ export default function SettingsPage() {
                 {([
                     { key: 'users' as Tab, label: 'User Management', icon: Users },
                     { key: 'roles' as Tab, label: 'Roles & Permissions', icon: Shield },
+                    { key: 'llm' as Tab, label: 'LLM Configuration', icon: Brain },
                 ]).map(({ key, label, icon: Icon }) => (
                     <button
                         key={key}
@@ -127,8 +131,10 @@ export default function SettingsPage() {
             <AnimatePresence mode="wait">
                 {activeTab === 'users' ? (
                     <UserManagementTab key="users" currentUserId={currentUser.id} />
-                ) : (
+                ) : activeTab === 'roles' ? (
                     <RolesTab key="roles" />
+                ) : (
+                    <LLMConfigTab key="llm" />
                 )}
             </AnimatePresence>
         </motion.div>
@@ -356,8 +362,8 @@ function UserManagementTab({ currentUserId }: { currentUserId: string }) {
                                                     <button
                                                         onClick={() => handleToggleActive(user)}
                                                         className={`p-1.5 rounded-lg transition-colors ${user.is_active
-                                                                ? 'text-slate-500 hover:text-amber-400 hover:bg-amber-400/10'
-                                                                : 'text-slate-500 hover:text-dna-green hover:bg-dna-green/10'
+                                                            ? 'text-slate-500 hover:text-amber-400 hover:bg-amber-400/10'
+                                                            : 'text-slate-500 hover:text-dna-green hover:bg-dna-green/10'
                                                             }`}
                                                         title={user.is_active ? 'Deactivate' : 'Activate'}
                                                     >
@@ -519,8 +525,8 @@ function CreateUserModal({
                                     type="button"
                                     onClick={() => setRole(r.role)}
                                     className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-body transition-all ${role === r.role
-                                            ? `${getRoleColor(r.role)} border-current`
-                                            : 'text-slate-500 border-white/5 hover:border-white/10 hover:bg-white/[3%]'
+                                        ? `${getRoleColor(r.role)} border-current`
+                                        : 'text-slate-500 border-white/5 hover:border-white/10 hover:bg-white/[3%]'
                                         }`}
                                 >
                                     <RIcon className="w-5 h-5" />
@@ -860,13 +866,13 @@ function CreateRoleModal({
                                     type="button"
                                     onClick={() => togglePerm(perm.key)}
                                     className={`flex items-center gap-3 p-3 rounded-xl border text-left transition-all ${selected
-                                            ? 'bg-dna-cyan/10 border-dna-cyan/30 text-slate-200'
-                                            : 'bg-white/[2%] border-white/5 text-slate-400 hover:border-white/10'
+                                        ? 'bg-dna-cyan/10 border-dna-cyan/30 text-slate-200'
+                                        : 'bg-white/[2%] border-white/5 text-slate-400 hover:border-white/10'
                                         }`}
                                 >
                                     <div className={`w-5 h-5 rounded-md border flex items-center justify-center flex-shrink-0 transition-colors ${selected
-                                            ? 'bg-dna-cyan border-dna-cyan text-white'
-                                            : 'border-slate-600'
+                                        ? 'bg-dna-cyan border-dna-cyan text-white'
+                                        : 'border-slate-600'
                                         }`}>
                                         {selected && <Check className="w-3.5 h-3.5" />}
                                     </div>
@@ -914,3 +920,432 @@ function CreateRoleModal({
         </Modal>
     )
 }
+
+
+// ═══════════════════════════════════════════════════════
+// LLM CONFIGURATION TAB
+// ═══════════════════════════════════════════════════════
+
+const PROVIDER_ICONS: Record<string, typeof Brain> = {
+    openrouter: Zap,
+    openai: Brain,
+    anthropic: Cpu,
+    google: Brain,
+    custom: Server,
+}
+
+const PROVIDER_COLORS: Record<string, string> = {
+    openrouter: 'text-purple-400 bg-purple-400/10 border-purple-400/30',
+    openai: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30',
+    anthropic: 'text-orange-400 bg-orange-400/10 border-orange-400/30',
+    google: 'text-blue-400 bg-blue-400/10 border-blue-400/30',
+    custom: 'text-slate-400 bg-slate-400/10 border-slate-400/30',
+}
+
+function LLMConfigTab() {
+    const [config, setConfig] = useState<LLMConfigResponse | null>(null)
+    const [providers, setProviders] = useState<LLMProviderPreset[]>([])
+    const [loading, setLoading] = useState(true)
+    const [saving, setSaving] = useState(false)
+    const [testing, setTesting] = useState(false)
+    const [testResult, setTestResult] = useState<{ success: boolean; message: string } | null>(null)
+    const [saved, setSaved] = useState(false)
+
+    // Form state
+    const [selectedProvider, setSelectedProvider] = useState('openrouter')
+    const [selectedModel, setSelectedModel] = useState('openrouter/auto:free')
+    const [displayName, setDisplayName] = useState('Auto (Free)')
+    const [apiKey, setApiKey] = useState('')
+    const [showApiKey, setShowApiKey] = useState(false)
+    const [baseUrl, setBaseUrl] = useState('https://openrouter.ai/api/v1')
+    const [temperature, setTemperature] = useState(0.4)
+    const [maxTokens, setMaxTokens] = useState(1000)
+    const [customModelId, setCustomModelId] = useState('')
+
+    useEffect(() => {
+        Promise.all([getLLMConfig(), getLLMProviders()])
+            .then(([cfg, provs]) => {
+                setConfig(cfg)
+                setProviders(provs)
+
+                // Populate form from saved config
+                setSelectedProvider(cfg.provider)
+                setSelectedModel(cfg.model_id)
+                setDisplayName(cfg.display_name)
+                setBaseUrl(cfg.base_url)
+                setTemperature(cfg.temperature)
+                setMaxTokens(cfg.max_tokens)
+
+                // For custom provider, populate custom model id
+                const prov = provs.find(p => p.provider === cfg.provider)
+                if (prov) {
+                    const modelMatch = prov.models.find(m => m.id === cfg.model_id)
+                    if (!modelMatch && cfg.provider === 'custom') {
+                        setCustomModelId(cfg.model_id)
+                    }
+                }
+            })
+            .catch(() => { })
+            .finally(() => setLoading(false))
+    }, [])
+
+    const handleProviderChange = (providerKey: string) => {
+        const prov = providers.find(p => p.provider === providerKey)
+        if (!prov) return
+
+        setSelectedProvider(providerKey)
+        setBaseUrl(prov.base_url)
+        setTestResult(null)
+        setSaved(false)
+
+        if (prov.models.length > 0 && providerKey !== 'custom') {
+            setSelectedModel(prov.models[0].id)
+            setDisplayName(prov.models[0].name)
+        } else {
+            setSelectedModel(customModelId || 'custom')
+            setDisplayName('Custom Model')
+        }
+    }
+
+    const handleModelChange = (modelId: string) => {
+        const prov = providers.find(p => p.provider === selectedProvider)
+        const model = prov?.models.find(m => m.id === modelId)
+        setSelectedModel(modelId)
+        setDisplayName(model?.name || modelId)
+        setTestResult(null)
+        setSaved(false)
+    }
+
+    const currentProvider = providers.find(p => p.provider === selectedProvider)
+    const currentModels = currentProvider?.models || []
+
+    const handleTest = async () => {
+        setTesting(true)
+        setTestResult(null)
+        try {
+            const result = await testLLMConfig({
+                provider: selectedProvider,
+                model_id: selectedProvider === 'custom' ? customModelId : selectedModel,
+                api_key: apiKey || undefined,
+                base_url: baseUrl,
+            })
+            setTestResult({
+                success: result.success,
+                message: result.success
+                    ? `Connected! Model replied: "${result.reply}"`
+                    : `Failed: ${result.error}`,
+            })
+        } catch (err: any) {
+            setTestResult({ success: false, message: err.message || 'Test failed' })
+        } finally {
+            setTesting(false)
+        }
+    }
+
+    const handleSave = async () => {
+        setSaving(true)
+        try {
+            const modelId = selectedProvider === 'custom' ? customModelId : selectedModel
+            const updated = await updateLLMConfig({
+                provider: selectedProvider,
+                model_id: modelId,
+                display_name: displayName,
+                api_key: apiKey || undefined,
+                base_url: baseUrl,
+                temperature,
+                max_tokens: maxTokens,
+            })
+            setConfig(updated)
+            setSaved(true)
+            // Clear the saved indicator after 3s
+            setTimeout(() => setSaved(false), 3000)
+        } catch { /* silent */ } finally {
+            setSaving(false)
+        }
+    }
+
+    if (loading) {
+        return <div className="text-center py-12 text-slate-500 font-body">Loading LLM configuration...</div>
+    }
+
+    return (
+        <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8 }}
+            className="space-y-6"
+        >
+            {/* Current Status */}
+            <div className="glass-panel rounded-2xl p-6">
+                <div className="flex items-center gap-3 mb-1">
+                    <Brain className="w-5 h-5 text-dna-cyan" />
+                    <h3 className="text-base font-headline font-bold text-slate-200">Active Model</h3>
+                    {config?.api_key_set ? (
+                        <span className="ml-auto flex items-center gap-1.5 text-xs text-dna-green font-body">
+                            <CheckCircle2 className="w-3.5 h-3.5" />
+                            API Key Configured
+                        </span>
+                    ) : (
+                        <span className="ml-auto flex items-center gap-1.5 text-xs text-amber-400 font-body">
+                            <AlertTriangle className="w-3.5 h-3.5" />
+                            No API Key — using fallback responses
+                        </span>
+                    )}
+                </div>
+                <p className="text-sm text-slate-500 font-body mb-3">
+                    Changes here apply immediately to the AI chat assistant.
+                </p>
+                <div className="grid grid-cols-3 gap-4">
+                    <div className="p-3 rounded-xl bg-white/[3%] border border-white/5">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500 font-body mb-0.5">Provider</p>
+                        <p className="text-sm text-slate-200 font-body font-medium">{currentProvider?.label || selectedProvider}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/[3%] border border-white/5">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500 font-body mb-0.5">Model</p>
+                        <p className="text-sm text-slate-200 font-body font-medium">{config?.display_name || displayName}</p>
+                    </div>
+                    <div className="p-3 rounded-xl bg-white/[3%] border border-white/5">
+                        <p className="text-[10px] uppercase tracking-wider text-slate-500 font-body mb-0.5">Last Updated</p>
+                        <p className="text-sm text-slate-200 font-body font-medium">
+                            {config?.updated_at
+                                ? new Date(config.updated_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+                                : 'Never'}
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Provider Selection */}
+            <div>
+                <h3 className="text-sm font-body font-semibold text-slate-300 mb-3">Select Provider</h3>
+                <div className="grid grid-cols-5 gap-3">
+                    {providers.map((prov) => {
+                        const PIcon = PROVIDER_ICONS[prov.provider] || Brain
+                        const isSelected = selectedProvider === prov.provider
+                        const colors = PROVIDER_COLORS[prov.provider] || PROVIDER_COLORS.custom
+                        return (
+                            <motion.button
+                                key={prov.provider}
+                                onClick={() => handleProviderChange(prov.provider)}
+                                className={`flex flex-col items-center gap-2 p-4 rounded-2xl border text-sm font-body transition-all ${isSelected
+                                    ? `${colors} border-current shadow-lg`
+                                    : 'text-slate-500 border-white/5 hover:border-white/10 hover:bg-white/[3%]'
+                                    }`}
+                                whileHover={{ scale: 1.02 }}
+                                whileTap={{ scale: 0.98 }}
+                            >
+                                <PIcon className="w-6 h-6" />
+                                <span className="font-medium">{prov.label}</span>
+                            </motion.button>
+                        )
+                    })}
+                </div>
+                {currentProvider && (
+                    <p className="mt-2 text-xs text-slate-500 font-body">{currentProvider.description}</p>
+                )}
+            </div>
+
+            {/* Model & API Config */}
+            <div className="grid grid-cols-2 gap-6">
+                {/* Left Column — Model & Key */}
+                <div className="space-y-4">
+                    {/* Model Selection */}
+                    {selectedProvider !== 'custom' ? (
+                        <div>
+                            <label className="block text-sm font-body font-medium text-slate-300 mb-1.5">Model</label>
+                            <div className="relative">
+                                <select
+                                    value={selectedModel}
+                                    onChange={(e) => handleModelChange(e.target.value)}
+                                    className="w-full appearance-none pl-3 pr-8 py-3 rounded-xl bg-white/5 border border-dna-cyan/15
+                    text-slate-200 font-body text-sm cursor-pointer
+                    focus:outline-none focus:border-dna-cyan/40 transition-colors"
+                                >
+                                    {currentModels.map((m) => (
+                                        <option key={m.id} value={m.id}>
+                                            {m.name}{m.context_window ? ` (${m.context_window})` : ''}{m.free ? ' ✦ Free' : ''}
+                                        </option>
+                                    ))}
+                                </select>
+                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500 pointer-events-none" />
+                            </div>
+                        </div>
+                    ) : (
+                        <>
+                            <div>
+                                <label className="block text-sm font-body font-medium text-slate-300 mb-1.5">Model ID</label>
+                                <input
+                                    type="text"
+                                    value={customModelId}
+                                    onChange={(e) => { setCustomModelId(e.target.value); setSelectedModel(e.target.value) }}
+                                    placeholder="e.g. llama3:70b"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-dna-cyan/15
+                    text-slate-100 placeholder-slate-500 font-body
+                    focus:outline-none focus:border-dna-cyan/50 transition-colors"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-body font-medium text-slate-300 mb-1.5">Base URL</label>
+                                <input
+                                    type="url"
+                                    value={baseUrl}
+                                    onChange={(e) => setBaseUrl(e.target.value)}
+                                    placeholder="http://localhost:11434/v1"
+                                    className="w-full px-4 py-3 rounded-xl bg-white/5 border border-dna-cyan/15
+                    text-slate-100 placeholder-slate-500 font-body
+                    focus:outline-none focus:border-dna-cyan/50 transition-colors"
+                                />
+                            </div>
+                        </>
+                    )}
+
+                    {/* API Key */}
+                    <div>
+                        <label className="block text-sm font-body font-medium text-slate-300 mb-1.5">
+                            API Key {config?.api_key_set && !apiKey && (
+                                <span className="text-xs text-dna-green ml-1">(saved — leave blank to keep)</span>
+                            )}
+                        </label>
+                        <div className="relative">
+                            <input
+                                type={showApiKey ? 'text' : 'password'}
+                                value={apiKey}
+                                onChange={(e) => { setApiKey(e.target.value); setSaved(false) }}
+                                placeholder={config?.api_key_set ? '••••••••••••••••••••' : 'sk-...'}
+                                className="w-full px-4 py-3 pr-12 rounded-xl bg-white/5 border border-dna-cyan/15
+                  text-slate-100 placeholder-slate-500 font-mono text-sm
+                  focus:outline-none focus:border-dna-cyan/50 transition-colors"
+                            />
+                            <button
+                                type="button"
+                                onClick={() => setShowApiKey(!showApiKey)}
+                                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                            >
+                                {showApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Right Column — Parameters */}
+                <div className="space-y-4">
+                    {/* Temperature */}
+                    <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-sm font-body font-medium text-slate-300">Temperature</label>
+                            <span className="text-sm font-mono text-dna-cyan">{temperature.toFixed(2)}</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="0" max="2" step="0.05"
+                            value={temperature}
+                            onChange={(e) => setTemperature(parseFloat(e.target.value))}
+                            className="w-full h-2 rounded-full appearance-none cursor-pointer
+                bg-white/10 accent-dna-cyan [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-dna-cyan
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:border-2
+                [&::-webkit-slider-thumb]:border-white/20"
+                        />
+                        <div className="flex justify-between mt-1">
+                            <span className="text-[10px] text-slate-600 font-body">Precise</span>
+                            <span className="text-[10px] text-slate-600 font-body">Creative</span>
+                        </div>
+                    </div>
+
+                    {/* Max Tokens */}
+                    <div>
+                        <div className="flex items-center justify-between mb-1.5">
+                            <label className="text-sm font-body font-medium text-slate-300">Max Tokens</label>
+                            <span className="text-sm font-mono text-dna-cyan">{maxTokens.toLocaleString()}</span>
+                        </div>
+                        <input
+                            type="range"
+                            min="100" max="16000" step="100"
+                            value={maxTokens}
+                            onChange={(e) => setMaxTokens(parseInt(e.target.value))}
+                            className="w-full h-2 rounded-full appearance-none cursor-pointer
+                bg-white/10 accent-dna-cyan [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4
+                [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-dna-cyan
+                [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:border-2
+                [&::-webkit-slider-thumb]:border-white/20"
+                        />
+                        <div className="flex justify-between mt-1">
+                            <span className="text-[10px] text-slate-600 font-body">Short</span>
+                            <span className="text-[10px] text-slate-600 font-body">Long</span>
+                        </div>
+                    </div>
+
+                    {/* Test Result */}
+                    {testResult && (
+                        <motion.div
+                            initial={{ opacity: 0, y: 4 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className={`p-3 rounded-xl border text-sm font-body ${testResult.success
+                                ? 'bg-dna-green/5 border-dna-green/20 text-dna-green'
+                                : 'bg-dna-magenta/5 border-dna-magenta/20 text-dna-magenta'
+                                }`}
+                        >
+                            <div className="flex items-start gap-2">
+                                {testResult.success ? (
+                                    <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                ) : (
+                                    <XCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                                )}
+                                <p className="break-all">{testResult.message}</p>
+                            </div>
+                        </motion.div>
+                    )}
+                </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3 pt-2 border-t border-white/5">
+                <motion.button
+                    onClick={handleTest}
+                    disabled={testing}
+                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl font-body text-sm
+            text-slate-300 border border-white/10 hover:bg-white/5
+            disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                >
+                    {testing ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                        <Zap className="w-4 h-4" />
+                    )}
+                    Test Connection
+                </motion.button>
+
+                <motion.button
+                    onClick={handleSave}
+                    disabled={saving}
+                    className={`flex items-center gap-2 px-5 py-2.5 rounded-xl font-body text-sm font-semibold
+            text-white shadow-glow-cyan transition-all
+            disabled:opacity-50 disabled:cursor-not-allowed ${saved
+                            ? 'bg-dna-green shadow-glow-green'
+                            : 'bg-gradient-to-r from-dna-cyan to-blue-600 hover:from-dna-cyan/90 hover:to-blue-500'
+                        }`}
+                    whileHover={{ scale: 1.01 }}
+                    whileTap={{ scale: 0.99 }}
+                >
+                    {saving ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : saved ? (
+                        <CheckCircle2 className="w-4 h-4" />
+                    ) : (
+                        <Check className="w-4 h-4" />
+                    )}
+                    {saved ? 'Saved!' : 'Save Configuration'}
+                </motion.button>
+
+                {config?.updated_by && (
+                    <span className="ml-auto text-xs text-slate-600 font-body">
+                        Last updated by {config.updated_by}
+                    </span>
+                )}
+            </div>
+        </motion.div>
+    )
+}
+
