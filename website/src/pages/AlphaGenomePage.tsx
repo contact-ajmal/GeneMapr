@@ -1,5 +1,5 @@
 import { motion, useInView } from 'framer-motion'
-import { useRef } from 'react'
+import { useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import {
     Dna, Brain, BarChart3, Zap, FlaskConical,
@@ -225,6 +225,120 @@ export function AlphaGenomePage() {
                     </div>
                     <style>{`@media (max-width: 768px) { .ag-about-grid { grid-template-columns: 1fr !important; } }`}</style>
                 </motion.div>
+
+                {/* Screenshot Showcase */}
+                {(() => {
+                    const ssRef = useRef(null)
+                    const ssInView = useInView(ssRef, { once: true, margin: '-50px' })
+                    const [activeShot, setActiveShot] = useState(0)
+
+                    const agScreenshots = [
+                        {
+                            src: '/screenshots/10_alphagenome_overview.png',
+                            title: 'AlphaGenome Analysis Dashboard',
+                            desc: 'Summary cards showing total predictions, mean effect score, high-impact count, and max score. Run Batch Prediction button triggers analysis for all variants in a sample via Google DeepMind\'s API.',
+                        },
+                        {
+                            src: '/screenshots/11_alphagenome_charts.png',
+                            title: 'Score Distribution & Prediction Overview',
+                            desc: 'Histogram visualization of variant effect scores across bins, alongside a prediction status breakdown showing completed, failed, running, and pending counts.',
+                        },
+                        {
+                            src: '/screenshots/12_alphagenome_variants.png',
+                            title: 'Top Impact Variants Table',
+                            desc: 'Sortable table of the most functionally impactful variants — showing gene name (e.g. CFTR, NUDT15, APP), chromosome position, REF/ALT alleles, effect score, and impact classification.',
+                        },
+                        {
+                            src: '/screenshots/13_alphagenome_genome_view.png',
+                            title: 'Genome View — Chromosomal Mapping',
+                            desc: 'Interactive cytogenetic ideogram (GRCh38) showing all predicted variants mapped across human chromosomes, color-coded by clinical significance (pathogenic, benign, VUS) with size proportional to risk.',
+                        },
+                    ]
+
+                    return (
+                        <div ref={ssRef} style={{ marginBottom: 80 }}>
+                            <motion.div
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={ssInView ? { opacity: 1, y: 0 } : {}}
+                                transition={{ duration: 0.6 }}
+                                style={{ textAlign: 'center', marginBottom: 40 }}
+                            >
+                                <span className="section-label" style={{ background: 'rgba(139, 92, 246, 0.15)', borderColor: 'rgba(139, 92, 246, 0.3)', color: '#a78bfa' }}>
+                                    ▸ See It in Action
+                                </span>
+                                <h2 className="section-title" style={{ margin: '0 auto 16px' }}>
+                                    AlphaGenome in <span className="gradient-text">GeneMapr</span>
+                                </h2>
+                                <p className="section-subtitle" style={{ margin: '0 auto' }}>
+                                    Real screenshots from the GeneMapr application showing AlphaGenome predictions in action.
+                                </p>
+                            </motion.div>
+
+                            {/* Featured screenshot */}
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                animate={ssInView ? { opacity: 1, y: 0 } : {}}
+                                transition={{ duration: 0.5, delay: 0.2 }}
+                                className="screenshot-frame"
+                                style={{ marginBottom: 24, cursor: 'pointer' }}
+                            >
+                                <img
+                                    src={agScreenshots[activeShot].src}
+                                    alt={agScreenshots[activeShot].title}
+                                    style={{ width: '100%', display: 'block' }}
+                                />
+                            </motion.div>
+
+                            {/* Active screenshot info */}
+                            <div style={{ textAlign: 'center', marginBottom: 28 }}>
+                                <h3 style={{
+                                    fontSize: '1.15rem', fontWeight: 700, color: '#e2e8f0', marginBottom: 8,
+                                    fontFamily: "'Outfit', sans-serif",
+                                }}>
+                                    {agScreenshots[activeShot].title}
+                                </h3>
+                                <p style={{ fontSize: '0.88rem', color: '#94a3b8', lineHeight: 1.6, maxWidth: 700, margin: '0 auto' }}>
+                                    {agScreenshots[activeShot].desc}
+                                </p>
+                            </div>
+
+                            {/* Thumbnail strip */}
+                            <div style={{
+                                display: 'grid',
+                                gridTemplateColumns: `repeat(${agScreenshots.length}, 1fr)`,
+                                gap: 12,
+                                maxWidth: 900,
+                                margin: '0 auto',
+                            }}>
+                                {agScreenshots.map((shot, i) => (
+                                    <div
+                                        key={shot.src}
+                                        onClick={() => setActiveShot(i)}
+                                        style={{
+                                            borderRadius: 10,
+                                            overflow: 'hidden',
+                                            border: i === activeShot
+                                                ? '2px solid #8b5cf6'
+                                                : '2px solid rgba(255,255,255,0.06)',
+                                            cursor: 'pointer',
+                                            opacity: i === activeShot ? 1 : 0.55,
+                                            transition: 'all 0.3s',
+                                            boxShadow: i === activeShot ? '0 0 20px rgba(139, 92, 246, 0.3)' : 'none',
+                                        }}
+                                        onMouseEnter={e => { if (i !== activeShot) e.currentTarget.style.opacity = '0.85' }}
+                                        onMouseLeave={e => { if (i !== activeShot) e.currentTarget.style.opacity = '0.55' }}
+                                    >
+                                        <img
+                                            src={shot.src}
+                                            alt={shot.title}
+                                            style={{ width: '100%', display: 'block' }}
+                                        />
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    )
+                })()}
 
                 {/* Capabilities grid */}
                 <div ref={capRef} style={{ marginBottom: 80 }}>
